@@ -63,10 +63,9 @@ export function Header() {
           <Link href="/">
             <span className="flex items-center gap-3 cursor-pointer" data-testid="logo-home-link">
               <img src={headerLogo} alt="IBPA" className="h-10 w-auto" />
-              <div className="flex flex-col">
-                <span className="text-lg font-bold text-primary leading-tight">Downtown Irwin</span>
-                <span className="text-xs text-muted-foreground leading-tight">IBPA</span>
-              </div>
+              <span className="hidden md:block text-xs text-muted-foreground max-w-xs leading-tight">
+                The IBPA is an all volunteer group that promotes the health & vitality of Irwin for the benefit of the surrounding communities.
+              </span>
             </span>
           </Link>
 
