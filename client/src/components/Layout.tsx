@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Menu, MapPin, Mail, Phone, Facebook, Instagram, ChevronDown } from "lucide-react";
+import { Menu, MapPin, Mail, Phone, Facebook, Instagram, ChevronDown, ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import {
@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const eventSubLinks = [
   { href: "/events", label: "All Events" },
@@ -203,6 +203,36 @@ export function Footer() {
   );
 }
 
+function BackToTop() {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const toggleVisibility = () => {
+      setIsVisible(window.scrollY > 300);
+    };
+
+    window.addEventListener("scroll", toggleVisibility);
+    return () => window.removeEventListener("scroll", toggleVisibility);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  if (!isVisible) return null;
+
+  return (
+    <Button
+      size="icon"
+      onClick={scrollToTop}
+      className="fixed bottom-6 right-6 z-50 rounded-full shadow-lg"
+      data-testid="button-back-to-top"
+    >
+      <ArrowUp className="h-5 w-5" />
+    </Button>
+  );
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
@@ -211,6 +241,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       <Footer />
+      <BackToTop />
     </div>
   );
 }
