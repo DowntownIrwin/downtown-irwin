@@ -1,7 +1,6 @@
 import { Link } from "wouter";
 import { Camera, ExternalLink } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { allGalleries, type CMSGallery } from "@/lib/content";
 
 function GalleryCard({ gallery }: { gallery: CMSGallery }) {
@@ -10,61 +9,60 @@ function GalleryCard({ gallery }: { gallery: CMSGallery }) {
   const externalAlbumUrl = (gallery as any).googleDriveUrl || (gallery as any).sourceUrl;
   
   return (
-    <Card className="overflow-hidden hover-elevate" data-testid={`card-gallery-${gallery.slug}`}>
-      <div className="aspect-video relative bg-muted">
-        {gallery.coverImage ? (
-          <img
-            src={gallery.coverImage}
-            alt={gallery.title}
-            className="w-full h-full object-cover"
-          />
-        ) : gallery.photos && gallery.photos.length > 0 ? (
-          <img
-            src={gallery.photos[0].image}
-            alt={gallery.title}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Camera className="h-12 w-12 text-muted-foreground/50" />
-          </div>
-        )}
-        {gallery.featured && (
-          <span className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
-            Featured
-          </span>
-        )}
-      </div>
-      <CardContent className="p-4">
-        <h3 className="font-semibold text-lg mb-2">{gallery.title}</h3>
-        {gallery.description && (
-          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-            {gallery.description}
-          </p>
-        )}
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-sm text-muted-foreground">
-            {photoCount} {photoCount === 1 ? "photo" : "photos"}
-          </span>
-          {photoCount > 0 ? (
-            <Link href={`/galleries/${gallery.slug}`}>
-              <Button variant="outline" size="sm" data-testid={`button-view-gallery-${gallery.slug}`}>
-                View Gallery
-              </Button>
-            </Link>
-          ) : externalAlbumUrl ? (
-            <a href={externalAlbumUrl} target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" size="sm" data-testid={`button-external-gallery-${gallery.slug}`}>
-                <ExternalLink className="h-4 w-4 mr-1" />
-                Google Drive
-              </Button>
-            </a>
+    <Link href={`/galleries/${gallery.slug}`}>
+      <Card className="overflow-hidden hover-elevate cursor-pointer" data-testid={`card-gallery-${gallery.slug}`}>
+        <div className="aspect-video relative bg-muted">
+          {gallery.coverImage ? (
+            <img
+              src={gallery.coverImage}
+              alt={gallery.title}
+              className="w-full h-full object-cover"
+            />
+          ) : gallery.photos && gallery.photos.length > 0 ? (
+            <img
+              src={gallery.photos[0].image}
+              alt={gallery.title}
+              className="w-full h-full object-cover"
+            />
           ) : (
-            <span className="text-sm text-muted-foreground italic">Coming soon</span>
+            <div className="w-full h-full flex items-center justify-center">
+              <Camera className="h-12 w-12 text-muted-foreground/50" />
+            </div>
+          )}
+          {gallery.featured && (
+            <span className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
+              Featured
+            </span>
           )}
         </div>
-      </CardContent>
-    </Card>
+        <CardContent className="p-4">
+          <h3 className="font-semibold text-lg mb-2">{gallery.title}</h3>
+          {gallery.description && (
+            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+              {gallery.description}
+            </p>
+          )}
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-sm text-muted-foreground">
+              {photoCount} {photoCount === 1 ? "photo" : "photos"}
+            </span>
+            {externalAlbumUrl && (
+              <span 
+                className="text-sm text-primary flex items-center gap-1"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  window.open(externalAlbumUrl, '_blank');
+                }}
+              >
+                <ExternalLink className="h-3 w-3" />
+                Google Drive
+              </span>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
 

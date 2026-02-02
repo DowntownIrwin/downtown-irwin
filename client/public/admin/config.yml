@@ -318,16 +318,23 @@ collections:
         name: "photos"
         widget: "list"
         required: false
-        hint: "Upload photos to display in this gallery"
+        hint: "Click '+' to add photos. Each photo can have an optional caption. Drag items to reorder."
         collapsed: false
+        minimize_collapsed: false
+        add_to_top: false
+        label_singular: "Photo"
+        summary: "{{fields.caption}} - {{fields.image}}"
         fields:
           - label: "Image"
             name: "image"
             widget: "image"
+            required: true
+            choose_url: false
           - label: "Caption"
             name: "caption"
             widget: "string"
             required: false
+            hint: "Optional description for this photo"
 
       - label: "Google Drive Album Link"
         name: "googleDriveUrl"
