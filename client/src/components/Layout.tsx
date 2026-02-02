@@ -25,6 +25,7 @@ const mobileNavLinks = [
   { href: "/street-market", label: "Street Market" },
   { href: "/night-market", label: "Night Market" },
   { href: "/calendar", label: "Calendar" },
+  { href: "/galleries", label: "Galleries" },
   { href: "/vendors", label: "Vendors" },
   { href: "/sponsors", label: "Sponsors" },
   { href: "/contact", label: "Contact" },
@@ -86,6 +87,7 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
             <NavLink href="/calendar" label="Calendar" />
+            <NavLink href="/galleries" label="Galleries" />
             <NavLink href="/vendors" label="Vendors" />
             <NavLink href="/sponsors" label="Sponsors" />
             <NavLink href="/contact" label="Contact" />

@@ -15,6 +15,8 @@ import StreetMarket from "@/pages/StreetMarket";
 import NightMarket from "@/pages/NightMarket";
 import Contact from "@/pages/Contact";
 import About from "@/pages/About";
+import Galleries from "@/pages/Galleries";
+import GalleryDetail from "@/pages/GalleryDetail";
 import NotFound from "@/pages/not-found";
 
 function AppRouter() {
@@ -32,6 +34,8 @@ function AppRouter() {
         <Route path="/street-market" component={StreetMarket} />
         <Route path="/night-market" component={NightMarket} />
         <Route path="/contact" component={Contact} />
+        <Route path="/galleries" component={Galleries} />
+        <Route path="/galleries/:slug" component={GalleryDetail} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
