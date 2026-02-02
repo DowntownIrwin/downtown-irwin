@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Store, FileText, CheckCircle, ExternalLink, Users, Loader2, Calendar } from "lucide-react";
 import { Link } from "wouter";
 import { useEvents } from "@/hooks/useCMS";
-import { type CMSEvent } from "@/lib/content";
+import { type CMSEvent, getEventUrls } from "@/lib/content";
 import { SEO } from "@/components/SEO";
 
 function EventVendorCard({ event }: { event: CMSEvent }) {
@@ -48,21 +48,24 @@ function EventVendorCard({ event }: { event: CMSEvent }) {
           </div>
         )}
 
-        {event.vendorUrl ? (
-          <a href={event.vendorUrl} target="_blank" rel="noopener noreferrer">
-            <Button className="w-full" disabled={event.status === "closed"} data-testid={`button-vendor-${event.slug}`}>
-              <Users className="h-4 w-4 mr-2" />
-              Apply for This Event
-              <ExternalLink className="ml-2 h-4 w-4" />
-            </Button>
-          </a>
-        ) : (
-          <Link href={`/events/${event.slug}`}>
-            <Button variant="outline" className="w-full" data-testid={`button-details-${event.slug}`}>
-              View Event Details
-            </Button>
-          </Link>
-        )}
+        {(() => {
+          const urls = getEventUrls(event);
+          return urls.vendorUrl ? (
+            <a href={urls.vendorUrl} target="_blank" rel="noopener noreferrer">
+              <Button className="w-full" disabled={event.status === "closed"} data-testid={`button-vendor-${event.slug}`}>
+                <Users className="h-4 w-4 mr-2" />
+                Apply for This Event
+                <ExternalLink className="ml-2 h-4 w-4" />
+              </Button>
+            </a>
+          ) : (
+            <Link href={`/events/${event.slug}`}>
+              <Button variant="outline" className="w-full" data-testid={`button-details-${event.slug}`}>
+                View Event Details
+              </Button>
+            </Link>
+          );
+        })()}
       </CardContent>
     </Card>
   );
@@ -71,7 +74,10 @@ function EventVendorCard({ event }: { event: CMSEvent }) {
 export default function Vendors() {
   const { data: events, isLoading } = useEvents();
   
-  const vendorEvents = events?.filter(e => e.vendorUrl || e.status === "open") || [];
+  const vendorEvents = events?.filter(e => {
+    const urls = getEventUrls(e);
+    return urls.vendorUrl || e.status === "open";
+  }) || [];
 
   return (
     <div className="py-12 md:py-16">

@@ -18,6 +18,7 @@ import {
   allEvents,
   sponsorTiers,
   allGalleries,
+  getEventUrls,
 } from "@/lib/content";
 import { useSponsorLogos } from "@/hooks/useCMS";
 import heroBackground from "@assets/72dpi_Photo_Oct_19_2024__5_56_10_AM_Downsized_edited_1770042251001.jpg";
@@ -320,30 +321,37 @@ function EventCard({ event }: { event: CMSEvent }) {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {event.vendorUrl && (
-            <a href={event.vendorUrl} target="_blank" rel="noopener noreferrer">
-              <Button size="sm" variant="outline">
-                <Users className="h-4 w-4 mr-1" />
-                Vendor Signup
-              </Button>
-            </a>
-          )}
-          {event.sponsorUrl && (
-            <a href={event.sponsorUrl} target="_blank" rel="noopener noreferrer">
-              <Button size="sm" variant="outline">
-                <ExternalLink className="h-4 w-4 mr-1" />
-                Sponsor
-              </Button>
-            </a>
-          )}
-          {event.attendeeUrl && (
-            <a href={event.attendeeUrl} target="_blank" rel="noopener noreferrer">
-              <Button size="sm">
-                <Ticket className="h-4 w-4 mr-1" />
-                Register
-              </Button>
-            </a>
-          )}
+          {(() => {
+            const urls = getEventUrls(event);
+            return (
+              <>
+                {urls.vendorUrl && (
+                  <a href={urls.vendorUrl} target="_blank" rel="noopener noreferrer">
+                    <Button size="sm" variant="outline">
+                      <Users className="h-4 w-4 mr-1" />
+                      Vendor Signup
+                    </Button>
+                  </a>
+                )}
+                {urls.sponsorUrl && (
+                  <a href={urls.sponsorUrl} target="_blank" rel="noopener noreferrer">
+                    <Button size="sm" variant="outline">
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      Sponsor
+                    </Button>
+                  </a>
+                )}
+                {urls.attendeeUrl && (
+                  <a href={urls.attendeeUrl} target="_blank" rel="noopener noreferrer">
+                    <Button size="sm">
+                      <Ticket className="h-4 w-4 mr-1" />
+                      Register
+                    </Button>
+                  </a>
+                )}
+              </>
+            );
+          })()}
         </div>
       </CardContent>
     </Card>

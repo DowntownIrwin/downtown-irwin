@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Car, Calendar, MapPin, Music, Utensils, Users, Crown, Award, Medal, Heart, ExternalLink, Loader2, Ticket } from "lucide-react";
 import { Link } from "wouter";
 import { useEventsByType, useSponsorLogos } from "@/hooks/useCMS";
+import { getEventUrls } from "@/lib/content";
 import type { SponsorLogosData } from "@shared/types";
 import { SEO } from "@/components/SEO";
 
@@ -293,30 +294,37 @@ export default function CarCruise() {
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-3">
-                    {event.attendeeUrl && (
-                      <a href={event.attendeeUrl} target="_blank" rel="noopener noreferrer">
-                        <Button data-testid="button-register-vehicle">
-                          <Ticket className="h-4 w-4 mr-2" />
-                          Register Vehicle
-                        </Button>
-                      </a>
-                    )}
-                    {event.vendorUrl && (
-                      <a href={event.vendorUrl} target="_blank" rel="noopener noreferrer">
-                        <Button variant="outline" data-testid="button-vendor-signup">
-                          <Users className="h-4 w-4 mr-2" />
-                          Vendor Signup
-                        </Button>
-                      </a>
-                    )}
-                    {event.sponsorUrl && (
-                      <a href={event.sponsorUrl} target="_blank" rel="noopener noreferrer">
-                        <Button variant="outline" data-testid="button-sponsor-event">
-                          <ExternalLink className="h-4 w-4 mr-2" />
-                          Sponsor
-                        </Button>
-                      </a>
-                    )}
+                    {(() => {
+                      const urls = getEventUrls(event);
+                      return (
+                        <>
+                          {urls.attendeeUrl && (
+                            <a href={urls.attendeeUrl} target="_blank" rel="noopener noreferrer">
+                              <Button data-testid="button-register-vehicle">
+                                <Ticket className="h-4 w-4 mr-2" />
+                                Register Vehicle
+                              </Button>
+                            </a>
+                          )}
+                          {urls.vendorUrl && (
+                            <a href={urls.vendorUrl} target="_blank" rel="noopener noreferrer">
+                              <Button variant="outline" data-testid="button-vendor-signup">
+                                <Users className="h-4 w-4 mr-2" />
+                                Vendor Signup
+                              </Button>
+                            </a>
+                          )}
+                          {urls.sponsorUrl && (
+                            <a href={urls.sponsorUrl} target="_blank" rel="noopener noreferrer">
+                              <Button variant="outline" data-testid="button-sponsor-event">
+                                <ExternalLink className="h-4 w-4 mr-2" />
+                                Sponsor
+                              </Button>
+                            </a>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               </CardContent>

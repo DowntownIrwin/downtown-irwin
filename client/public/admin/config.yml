@@ -8,35 +8,67 @@ public_folder: "/uploads"
 collections:
   - name: "events"
     label: "Events"
+    label_singular: "Event"
     folder: "client/src/content/events"
     create: true
-    slug: "{{slug}}"
+    slug: "{{title | slug}}"
+    identifier_field: "title"
     extension: "json"
     format: "json"
     sortable_fields: ["startDate", "title"]
+    summary: "{{title}} - {{startDate | date('MMM D, YYYY')}}"
     fields:
-      - { label: "Slug", name: "slug", widget: "string", required: true, pattern: ['^[a-z0-9-]+$', "Lowercase letters, numbers, and hyphens only"] }
-      - { label: "Title", name: "title", widget: "string", required: true }
-      - { label: "Start Date", name: "startDate", widget: "datetime", required: true, date_format: "MMMM D, YYYY", time_format: false }
-      - { label: "End Date", name: "endDate", widget: "datetime", required: false, date_format: "MMMM D, YYYY", time_format: false }
-      - { label: "Time Text", name: "timeText", widget: "string", required: false, hint: "e.g., 10:00 AM - 8:00 PM" }
-      - { label: "Location", name: "location", widget: "string", required: false }
-      - { label: "Description", name: "description", widget: "markdown", required: true }
+      - label: "Event Title"
+        name: "title"
+        widget: "string"
+        required: true
+        hint: "The name of your event (e.g., 'Irwin Car Cruise 2026')"
+
+      - label: "Date"
+        name: "startDate"
+        widget: "datetime"
+        required: true
+        date_format: "MMMM D, YYYY"
+        time_format: false
+        hint: "When does the event take place?"
+
+      - label: "End Date (if multi-day)"
+        name: "endDate"
+        widget: "datetime"
+        required: false
+        date_format: "MMMM D, YYYY"
+        time_format: false
+        hint: "Leave empty for single-day events"
+
+      - label: "Hours"
+        name: "timeText"
+        widget: "string"
+        required: false
+        hint: "Example: 10 AM - 8 PM"
+
+      - label: "Location"
+        name: "location"
+        widget: "string"
+        required: false
+        default: "Main Street, Irwin PA"
+        hint: "Where is the event held?"
+
+      - label: "Description"
+        name: "description"
+        widget: "markdown"
+        required: true
+        hint: "Tell visitors what this event is about"
+
       - label: "Status"
         name: "status"
         widget: "select"
         options:
-          - { label: "Open for Registration", value: "open" }
-          - { label: "Upcoming", value: "upcoming" }
-          - { label: "Closed/Past", value: "closed" }
+          - { label: "Open (taking signups)", value: "open" }
+          - { label: "Upcoming (not open yet)", value: "upcoming" }
+          - { label: "Closed (event ended)", value: "closed" }
         default: "upcoming"
-      - { label: "Vendor/Attendee Cap", name: "cap", widget: "number", required: false, value_type: "int", hint: "Maximum number of vendors or attendees" }
-      - { label: "Vendor Signup URL", name: "vendorUrl", widget: "string", required: false }
-      - { label: "Sponsor URL", name: "sponsorUrl", widget: "string", required: false }
-      - { label: "Attendee/Register URL", name: "attendeeUrl", widget: "string", required: false }
-      - { label: "Hero Image", name: "heroImage", widget: "image", required: false }
-      - { label: "Gallery Slug", name: "gallerySlug", widget: "relation", collection: "galleries", value_field: "slug", search_fields: ["title", "slug"], display_fields: ["title"], required: false }
-      - { label: "Featured Event", name: "featured", widget: "boolean", default: false }
+        hint: "Is this event accepting registrations?"
+
       - label: "Event Type"
         name: "eventType"
         widget: "select"
@@ -44,38 +76,192 @@ collections:
           - { label: "Car Cruise", value: "car-cruise" }
           - { label: "Street Market", value: "street-market" }
           - { label: "Night Market", value: "night-market" }
-          - { label: "Other", value: "other" }
+          - { label: "Other Event", value: "other" }
         default: "other"
+        hint: "What kind of event is this?"
+
+      - label: "Featured Event"
+        name: "featured"
+        widget: "boolean"
+        default: false
+        hint: "Show this event prominently on the homepage"
+
+      - label: "Hero Image"
+        name: "heroImage"
+        widget: "image"
+        required: false
+        hint: "Large banner image for the event page"
+
+      - label: "Links & Signups"
+        name: "links"
+        widget: "object"
+        collapsed: true
+        hint: "Add signup and registration links"
+        fields:
+          - label: "Vendor Signup Link"
+            name: "vendorUrl"
+            widget: "string"
+            required: false
+            hint: "Square or Jotform link for vendor applications"
+
+          - label: "Sponsor Link"
+            name: "sponsorUrl"
+            widget: "string"
+            required: false
+            hint: "Link to sponsor signup form"
+
+          - label: "Attendee Registration Link"
+            name: "attendeeUrl"
+            widget: "string"
+            required: false
+            hint: "Link for attendees to register or RSVP"
+
+      - label: "Capacity Limit"
+        name: "cap"
+        widget: "number"
+        required: false
+        value_type: "int"
+        hint: "Maximum vendors or attendees (leave empty for unlimited)"
+
+      - label: "Photo Gallery"
+        name: "gallerySlug"
+        widget: "relation"
+        collection: "galleries"
+        value_field: "title"
+        search_fields: ["title"]
+        display_fields: ["title"]
+        required: false
+        hint: "Link to a photo gallery for this event"
+
+  - name: "galleries"
+    label: "Photo Galleries"
+    label_singular: "Gallery"
+    folder: "client/src/content/galleries"
+    create: true
+    slug: "{{title | slug}}"
+    identifier_field: "title"
+    extension: "json"
+    format: "json"
+    summary: "{{title}}"
+    fields:
+      - label: "Gallery Title"
+        name: "title"
+        widget: "string"
+        required: true
+        hint: "Name of this photo collection (e.g., 'Car Cruise 2025 Photos')"
+
+      - label: "Description"
+        name: "description"
+        widget: "text"
+        required: false
+        hint: "Brief description of what's in this gallery"
+
+      - label: "Featured Gallery"
+        name: "featured"
+        widget: "boolean"
+        default: false
+        hint: "Show this gallery prominently on the galleries page"
+
+      - label: "Cover Image"
+        name: "coverImage"
+        widget: "image"
+        required: false
+        hint: "Main image shown as the gallery thumbnail"
+
+      - label: "Photo Source"
+        name: "sourceType"
+        widget: "select"
+        options:
+          - { label: "Upload photos here", value: "uploaded" }
+          - { label: "Link to Google Drive album", value: "drive" }
+          - { label: "Link to Facebook album", value: "facebook" }
+        default: "uploaded"
+        hint: "Where are the photos stored?"
+
+      - label: "External Album Link"
+        name: "sourceUrl"
+        widget: "string"
+        required: false
+        hint: "Paste the Google Drive or Facebook album URL here"
+
+      - label: "Photos"
+        name: "photos"
+        widget: "list"
+        required: false
+        hint: "Add photos if using 'Upload photos here' option"
+        collapsed: true
+        fields:
+          - label: "Image"
+            name: "image"
+            widget: "image"
+          - label: "Caption"
+            name: "caption"
+            widget: "string"
+            required: false
 
   - name: "pages"
     label: "Pages"
+    label_singular: "Page"
     folder: "client/src/content/pages"
     create: true
-    slug: "{{slug}}"
+    slug: "{{title | slug}}"
+    identifier_field: "title"
     extension: "json"
     format: "json"
+    summary: "{{title}}"
     fields:
-      - { label: "Title", name: "title", widget: "string", required: true }
-      - { label: "Slug", name: "slug", widget: "string", required: true, pattern: ['^[a-z0-9-]+$', "Lowercase letters, numbers, and hyphens only"], hint: "URL path (e.g., 'about' for /about)" }
-      - { label: "Navigation Label", name: "navLabel", widget: "string", required: false, hint: "Text shown in navigation menu (defaults to title)" }
-      - { label: "Show in Navigation", name: "showInNav", widget: "boolean", default: true }
-      - { label: "Navigation Order", name: "navOrder", widget: "number", required: false, value_type: "int", default: 100 }
-      - label: "Template"
+      - label: "Page Title"
+        name: "title"
+        widget: "string"
+        required: true
+        hint: "The title shown at the top of the page"
+
+      - label: "URL Path"
+        name: "slug"
+        widget: "string"
+        required: true
+        pattern: ['^[a-z0-9-]+$', "Use lowercase letters, numbers, and hyphens only"]
+        hint: "The URL for this page (e.g., 'about' creates /about)"
+
+      - label: "Show in Menu"
+        name: "showInNav"
+        widget: "boolean"
+        default: true
+        hint: "Should this page appear in the navigation menu?"
+
+      - label: "Menu Label"
+        name: "navLabel"
+        widget: "string"
+        required: false
+        hint: "Text shown in the menu (uses title if empty)"
+
+      - label: "Menu Order"
+        name: "navOrder"
+        widget: "number"
+        required: false
+        value_type: "int"
+        default: 100
+        hint: "Lower numbers appear first in menu"
+
+      - label: "Page Layout"
         name: "template"
         widget: "select"
         options:
-          - { label: "Landing Page", value: "landing" }
+          - { label: "Landing Page (with sections)", value: "landing" }
           - { label: "Basic Page", value: "basic" }
           - { label: "Gallery Page", value: "gallery" }
           - { label: "Event Hub", value: "eventHub" }
         default: "basic"
+
       - name: "sections"
         label: "Page Sections"
         widget: "list"
+        hint: "Add and arrange content blocks"
         types:
           - name: "hero"
-            label: "Hero Section"
+            label: "Hero Banner"
             widget: "object"
+            summary: "Hero: {{fields.headline}}"
             fields:
               - { label: "Headline", name: "headline", widget: "string", required: true }
               - { label: "Subheadline", name: "subheadline", widget: "string", required: false }
@@ -85,19 +271,23 @@ collections:
                 widget: "list"
                 required: false
                 fields:
-                  - { label: "Text", name: "text", widget: "string" }
-                  - { label: "URL", name: "url", widget: "string" }
+                  - { label: "Button Text", name: "text", widget: "string" }
+                  - { label: "Link URL", name: "url", widget: "string" }
                   - { label: "Style", name: "style", widget: "select", options: ["primary", "secondary", "outline"], default: "primary" }
+
           - name: "text"
             label: "Text Block"
             widget: "object"
+            summary: "Text: {{fields.heading}}"
             fields:
               - { label: "Heading", name: "heading", widget: "string", required: false }
-              - { label: "Body", name: "body", widget: "markdown", required: true }
+              - { label: "Content", name: "body", widget: "markdown", required: true }
               - { label: "Alignment", name: "alignment", widget: "select", options: ["left", "center", "right"], default: "left" }
+
           - name: "photoGrid"
             label: "Photo Grid"
             widget: "object"
+            summary: "Photos: {{fields.heading}}"
             fields:
               - { label: "Heading", name: "heading", widget: "string", required: false }
               - { label: "Columns", name: "columns", widget: "select", options: ["2", "3", "4"], default: "3" }
@@ -108,90 +298,72 @@ collections:
                   - { label: "Image", name: "image", widget: "image" }
                   - { label: "Caption", name: "caption", widget: "string", required: false }
                   - { label: "Link URL", name: "linkUrl", widget: "string", required: false }
+
           - name: "cta"
             label: "Call to Action"
             widget: "object"
+            summary: "CTA: {{fields.heading}}"
             fields:
               - { label: "Heading", name: "heading", widget: "string", required: true }
               - { label: "Description", name: "description", widget: "text", required: false }
-              - { label: "Background Color", name: "backgroundColor", widget: "select", options: ["default", "primary", "accent", "muted"], default: "primary" }
+              - { label: "Background", name: "backgroundColor", widget: "select", options: ["default", "primary", "accent", "muted"], default: "primary" }
               - name: "buttons"
                 label: "Buttons"
                 widget: "list"
                 fields:
-                  - { label: "Text", name: "text", widget: "string" }
-                  - { label: "URL", name: "url", widget: "string" }
+                  - { label: "Button Text", name: "text", widget: "string" }
+                  - { label: "Link URL", name: "url", widget: "string" }
                   - { label: "Style", name: "style", widget: "select", options: ["primary", "secondary", "outline"], default: "primary" }
+
           - name: "faq"
             label: "FAQ Section"
             widget: "object"
+            summary: "FAQ: {{fields.heading}}"
             fields:
               - { label: "Heading", name: "heading", widget: "string", default: "Frequently Asked Questions" }
               - name: "items"
-                label: "FAQ Items"
+                label: "Questions & Answers"
                 widget: "list"
                 fields:
                   - { label: "Question", name: "question", widget: "string" }
                   - { label: "Answer", name: "answer", widget: "markdown" }
+
           - name: "embed"
-            label: "Embed (iframe/code)"
+            label: "Embed Code"
             widget: "object"
+            summary: "Embed: {{fields.heading}}"
             fields:
               - { label: "Heading", name: "heading", widget: "string", required: false }
-              - { label: "Embed HTML", name: "embedHtml", widget: "text", required: true, hint: "Paste iframe or embed code here" }
-              - { label: "Max Width", name: "maxWidth", widget: "select", options: ["full", "large", "medium", "small"], default: "large" }
+              - { label: "Embed Code", name: "embedHtml", widget: "text", required: true, hint: "Paste iframe or embed code (YouTube, calendar, etc.)" }
+              - { label: "Width", name: "maxWidth", widget: "select", options: ["full", "large", "medium", "small"], default: "large" }
+
           - name: "sponsors"
             label: "Sponsors Display"
             widget: "object"
+            summary: "Sponsors Section"
             fields:
               - { label: "Heading", name: "heading", widget: "string", default: "Our Sponsors" }
               - { label: "Show Tier Cards", name: "showTierCards", widget: "boolean", default: true }
-              - { label: "Show Logos", name: "showLogos", widget: "boolean", default: true }
+              - { label: "Show Sponsor Logos", name: "showLogos", widget: "boolean", default: true }
+
           - name: "eventsList"
             label: "Events List"
             widget: "object"
+            summary: "Events: {{fields.heading}}"
             fields:
               - { label: "Heading", name: "heading", widget: "string", default: "Upcoming Events" }
               - { label: "Filter by Type", name: "filterType", widget: "select", options: ["all", "car-cruise", "street-market", "night-market"], default: "all" }
-              - { label: "Show Only Featured", name: "featuredOnly", widget: "boolean", default: false }
-              - { label: "Max Events", name: "maxEvents", widget: "number", value_type: "int", default: 6 }
+              - { label: "Featured Only", name: "featuredOnly", widget: "boolean", default: false }
+              - { label: "Max Events to Show", name: "maxEvents", widget: "number", value_type: "int", default: 6 }
+
           - name: "galleriesList"
             label: "Galleries List"
             widget: "object"
+            summary: "Galleries: {{fields.heading}}"
             fields:
               - { label: "Heading", name: "heading", widget: "string", default: "Photo Galleries" }
-              - { label: "Show Only Featured", name: "featuredOnly", widget: "boolean", default: false }
-              - { label: "Max Galleries", name: "maxGalleries", widget: "number", value_type: "int", default: 6 }
-
-  - name: "galleries"
-    label: "Photo Galleries"
-    folder: "client/src/content/galleries"
-    create: true
-    slug: "{{slug}}"
-    extension: "json"
-    format: "json"
-    fields:
-      - { label: "Slug", name: "slug", widget: "string", required: true, pattern: ['^[a-z0-9-]+$', "Lowercase letters, numbers, and hyphens only"] }
-      - { label: "Title", name: "title", widget: "string", required: true }
-      - { label: "Description", name: "description", widget: "text", required: false }
-      - label: "Source Type"
-        name: "sourceType"
-        widget: "select"
-        options:
-          - { label: "Uploaded Photos", value: "uploaded" }
-          - { label: "Google Drive Album", value: "drive" }
-          - { label: "Facebook Album", value: "facebook" }
-        default: "uploaded"
-      - { label: "External Source URL", name: "sourceUrl", widget: "string", required: false, hint: "URL to Google Drive or Facebook album (if using external source)" }
-      - { label: "Featured Gallery", name: "featured", widget: "boolean", default: false }
-      - { label: "Cover Image", name: "coverImage", widget: "image", required: false }
-      - name: "photos"
-        label: "Photos"
-        widget: "list"
-        required: false
-        fields:
-          - { label: "Image", name: "image", widget: "image" }
-          - { label: "Caption", name: "caption", widget: "string", required: false }
+              - { label: "Featured Only", name: "featuredOnly", widget: "boolean", default: false }
+              - { label: "Max Galleries to Show", name: "maxGalleries", widget: "number", value_type: "int", default: 6 }
 
   - name: "site"
     label: "Site Settings"
@@ -200,30 +372,31 @@ collections:
         label: "Site Settings"
         file: "client/src/content/site.json"
         fields:
-          - { label: "Site Name", name: "siteName", widget: "string" }
-          - { label: "Tagline", name: "tagline", widget: "string" }
+          - { label: "Site Name", name: "siteName", widget: "string", hint: "Your organization name" }
+          - { label: "Tagline", name: "tagline", widget: "string", hint: "A short slogan or description" }
           - { label: "Contact Email", name: "contactEmail", widget: "string" }
           - { label: "Contact Phone", name: "contactPhone", widget: "string" }
           - { label: "Address", name: "address", widget: "string" }
-          - { label: "Facebook URL", name: "facebookUrl", widget: "string", required: false }
+          - { label: "Facebook Page URL", name: "facebookUrl", widget: "string", required: false }
           - { label: "Instagram URL", name: "instagramUrl", widget: "string", required: false }
-          - { label: "Logo", name: "logo", widget: "image", required: false }
-          - { label: "Favicon", name: "favicon", widget: "image", required: false }
+          - { label: "Logo", name: "logo", widget: "image", required: false, hint: "Your organization logo" }
+          - { label: "Favicon", name: "favicon", widget: "image", required: false, hint: "Small icon shown in browser tabs" }
 
   - name: "sponsorTiers"
     label: "Sponsor Tiers"
     files:
       - name: "tiers"
-        label: "Sponsorship Tiers"
+        label: "Sponsorship Levels"
         file: "client/src/content/sponsors/tiers.json"
         fields:
           - name: "tiers"
-            label: "Tiers"
+            label: "Sponsorship Levels"
             widget: "list"
+            hint: "Define different sponsorship packages"
             fields:
-              - { label: "ID", name: "id", widget: "string" }
-              - { label: "Name", name: "name", widget: "string" }
-              - { label: "Price", name: "price", widget: "number", value_type: "int" }
-              - { label: "Benefits", name: "benefits", widget: "list", field: { label: "Benefit", name: "benefit", widget: "string" } }
-              - { label: "Square Payment URL", name: "squareUrl", widget: "string" }
-              - { label: "Display Order", name: "order", widget: "number", value_type: "int" }
+              - { label: "ID", name: "id", widget: "string", hint: "Unique identifier (e.g., 'gold', 'silver')" }
+              - { label: "Level Name", name: "name", widget: "string", hint: "e.g., 'Gold Sponsor'" }
+              - { label: "Price", name: "price", widget: "number", value_type: "int", hint: "Cost in dollars" }
+              - { label: "Benefits", name: "benefits", widget: "list", field: { label: "Benefit", name: "benefit", widget: "string" }, hint: "What sponsors get at this level" }
+              - { label: "Payment Link", name: "squareUrl", widget: "string", hint: "Square or payment form URL" }
+              - { label: "Display Order", name: "order", widget: "number", value_type: "int", hint: "Lower numbers appear first" }

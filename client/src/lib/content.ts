@@ -1,6 +1,12 @@
 // Content types for the CMS
+export interface EventLinks {
+  vendorUrl?: string | null;
+  sponsorUrl?: string | null;
+  attendeeUrl?: string | null;
+}
+
 export interface CMSEvent {
-  slug: string;
+  slug?: string;
   title: string;
   startDate: string;
   endDate?: string | null;
@@ -12,10 +18,40 @@ export interface CMSEvent {
   vendorUrl?: string | null;
   sponsorUrl?: string | null;
   attendeeUrl?: string | null;
+  links?: EventLinks;
   heroImage?: string | null;
   gallerySlug?: string | null;
   featured: boolean;
   eventType: "car-cruise" | "street-market" | "night-market" | "other";
+}
+
+// Helper to get URLs from event (supports both old flat and new nested structure)
+export function getEventUrls(event: CMSEvent): EventLinks {
+  return {
+    vendorUrl: event.links?.vendorUrl || event.vendorUrl || null,
+    sponsorUrl: event.links?.sponsorUrl || event.sponsorUrl || null,
+    attendeeUrl: event.links?.attendeeUrl || event.attendeeUrl || null,
+  };
+}
+
+// Generate slug from title if not present
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
+// Normalize event to ensure it has a slug
+function normalizeEvent(event: CMSEvent, filename: string): CMSEvent {
+  const slug = event.slug || slugify(event.title) || filename.replace('.json', '');
+  return { ...event, slug };
+}
+
+// Normalize gallery to ensure it has a slug
+function normalizeGallery(gallery: CMSGallery, filename: string): CMSGallery {
+  const slug = gallery.slug || slugify(gallery.title) || filename.replace('.json', '');
+  return { ...gallery, slug };
 }
 
 export interface SectionButton {
@@ -160,48 +196,34 @@ export interface SponsorTier {
 import siteSettings from "@/content/site.json";
 import sponsorTiersData from "@/content/sponsors/tiers.json";
 
-// Import pages
-import homePage from "@/content/pages/home.json";
-import aboutPage from "@/content/pages/about.json";
-import eventsPage from "@/content/pages/events.json";
-import carCruisePage from "@/content/pages/car-cruise.json";
-import streetMarketPage from "@/content/pages/street-market.json";
-import nightMarketPage from "@/content/pages/night-market.json";
-import vendorsPage from "@/content/pages/vendors.json";
-import sponsorsPage from "@/content/pages/sponsors.json";
-import calendarPage from "@/content/pages/calendar.json";
-import contactPage from "@/content/pages/contact.json";
-
 // Dynamic imports using Vite's glob import
 // This automatically loads all JSON files from these directories
+const pageModules = import.meta.glob("@/content/pages/*.json", { eager: true });
 const eventModules = import.meta.glob("@/content/events/*.json", { eager: true });
 const galleryModules = import.meta.glob("@/content/galleries/*.json", { eager: true });
+
+// Helper to extract filename from path
+function getFilename(path: string): string {
+  return path.split('/').pop() || '';
+}
 
 // Exports
 export const site = siteSettings as SiteSettings;
 export const sponsorTiers = sponsorTiersData.tiers as SponsorTier[];
 
-export const allPages: CMSPage[] = [
-  homePage as CMSPage,
-  aboutPage as CMSPage,
-  eventsPage as CMSPage,
-  carCruisePage as CMSPage,
-  streetMarketPage as CMSPage,
-  nightMarketPage as CMSPage,
-  vendorsPage as CMSPage,
-  sponsorsPage as CMSPage,
-  calendarPage as CMSPage,
-  contactPage as CMSPage,
-];
-
-// Dynamically load all events from the events folder
-export const allEvents: CMSEvent[] = Object.values(eventModules).map(
-  (mod: any) => mod.default as CMSEvent
+// Dynamically load all pages from the pages folder
+export const allPages: CMSPage[] = Object.entries(pageModules).map(
+  ([path, mod]: [string, any]) => mod.default as CMSPage
 );
 
-// Dynamically load all galleries from the galleries folder
-export const allGalleries: CMSGallery[] = Object.values(galleryModules).map(
-  (mod: any) => mod.default as CMSGallery
+// Dynamically load all events from the events folder (with slug normalization)
+export const allEvents: CMSEvent[] = Object.entries(eventModules).map(
+  ([path, mod]: [string, any]) => normalizeEvent(mod.default as CMSEvent, getFilename(path))
+);
+
+// Dynamically load all galleries from the galleries folder (with slug normalization)
+export const allGalleries: CMSGallery[] = Object.entries(galleryModules).map(
+  ([path, mod]: [string, any]) => normalizeGallery(mod.default as CMSGallery, getFilename(path))
 );
 
 // Helper functions
@@ -215,6 +237,11 @@ export function getEventBySlug(slug: string): CMSEvent | undefined {
 
 export function getGalleryBySlug(slug: string): CMSGallery | undefined {
   return allGalleries.find(g => g.slug === slug);
+}
+
+// Get gallery by title (used for relation field lookups)
+export function getGalleryByTitle(title: string): CMSGallery | undefined {
+  return allGalleries.find(g => g.title === title);
 }
 
 export function getNavPages(): CMSPage[] {

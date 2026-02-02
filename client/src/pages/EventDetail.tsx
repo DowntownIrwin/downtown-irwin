@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, Clock, Loader2, Users, ExternalLink, Ticket, ArrowLeft, Info } from "lucide-react";
 import { Link, useRoute } from "wouter";
 import { useEvent } from "@/hooks/useCMS";
+import { getEventUrls } from "@/lib/content";
 import { SEO } from "@/components/SEO";
 
 export default function EventDetail() {
@@ -150,32 +151,39 @@ export default function EventDetail() {
                 </div>
 
                 <div className="space-y-3 pt-4 border-t">
-                  {event.vendorUrl && (
-                    <a href={event.vendorUrl} target="_blank" rel="noopener noreferrer" className="block">
-                      <Button className="w-full" variant="outline" data-testid="button-vendor-signup">
-                        <Users className="h-4 w-4 mr-2" />
-                        Vendor Signup
-                      </Button>
-                    </a>
-                  )}
-                  
-                  {event.sponsorUrl && (
-                    <a href={event.sponsorUrl} target="_blank" rel="noopener noreferrer" className="block">
-                      <Button className="w-full" variant="outline" data-testid="button-sponsor-event">
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Sponsor This Event
-                      </Button>
-                    </a>
-                  )}
-                  
-                  {event.attendeeUrl && (
-                    <a href={event.attendeeUrl} target="_blank" rel="noopener noreferrer" className="block">
-                      <Button className="w-full" data-testid="button-register-event">
-                        <Ticket className="h-4 w-4 mr-2" />
-                        Attend / Register
-                      </Button>
-                    </a>
-                  )}
+                  {(() => {
+                    const urls = getEventUrls(event);
+                    return (
+                      <>
+                        {urls.vendorUrl && (
+                          <a href={urls.vendorUrl} target="_blank" rel="noopener noreferrer" className="block">
+                            <Button className="w-full" variant="outline" data-testid="button-vendor-signup">
+                              <Users className="h-4 w-4 mr-2" />
+                              Vendor Signup
+                            </Button>
+                          </a>
+                        )}
+                        
+                        {urls.sponsorUrl && (
+                          <a href={urls.sponsorUrl} target="_blank" rel="noopener noreferrer" className="block">
+                            <Button className="w-full" variant="outline" data-testid="button-sponsor-event">
+                              <ExternalLink className="h-4 w-4 mr-2" />
+                              Sponsor This Event
+                            </Button>
+                          </a>
+                        )}
+                        
+                        {urls.attendeeUrl && (
+                          <a href={urls.attendeeUrl} target="_blank" rel="noopener noreferrer" className="block">
+                            <Button className="w-full" data-testid="button-register-event">
+                              <Ticket className="h-4 w-4 mr-2" />
+                              Attend / Register
+                            </Button>
+                          </a>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </CardContent>
             </Card>

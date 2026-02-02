@@ -1,0 +1,66 @@
+Fix the CMS workflow + redesign the Decap admin UI so it’s novice-friendly.
+
+GOAL WORKFLOW (must be true):
+- Editors only use /admin.
+- Clicking “Publish” in Decap MUST create a commit in GitHub via Netlify Git Gateway automatically.
+- No one should ever run git add/commit/push in shell for content changes.
+- After a CMS Publish, Netlify rebuilds and the new/edited event/gallery/page appears on the live site.
+
+1) Fix persistence:
+- Ensure Decap config uses:
+  backend:
+    name: git-gateway
+    branch: main
+- Ensure /admin/config.yml is served in production at /admin/config.yml (no SPA redirect swallowing it).
+- Ensure Netlify Identity widget is loaded in /admin:
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+- Ensure Netlify redirects allow admin assets:
+  /admin/* must NOT be routed to /index.html.
+  Use redirects like:
+    /admin/*  /admin/:splat  200
+    /*        /index.html     200
+- Confirm that publishing creates commits under GitHub “Commits” (this is the acceptance test).
+
+2) Make new Events/Galleries/Pages appear automatically WITHOUT editing code:
+- Use Vite’s import.meta.glob for content loading so newly added JSON files are picked up on rebuild:
+  - events: client/src/content/events/*.json
+  - galleries: client/src/content/galleries/*.json
+  - pages: client/src/content/pages/*.json
+- Ensure the code does NOT use hardcoded arrays of imports.
+- Ensure list pages use the glob results to build the list.
+- Acceptance test: create a new event in /admin, publish; it appears on /events after deploy.
+
+3) Remove “slug” from the editor experience:
+- Editors should never type a slug.
+- In Decap config.yml:
+  - Remove the “slug” field from Events and Galleries forms entirely.
+  - Set the collection slug template to auto-generate from title:
+      slug: "{{title}}"
+    (Decap will slugify automatically.)
+  - Set identifier_field: "title" so lists show titles clearly.
+- If a slug is still needed internally, generate it automatically on save from title (do not show field).
+
+4) Make the admin feel less text-heavy:
+- Rework labels and hints to be human:
+  - “Time Text” → “Hours (example: 12–4 PM)”
+  - “Vendor Signup URL” → “Vendor Signup Link (Square/Jotform)”
+  - “Sponsor URL” → “Sponsor Link”
+  - “Status” → dropdown with friendly values:
+     Open (taking signups), Upcoming, Closed
+- Add helper hints to every field.
+- Make optional fields truly optional (required: false).
+- Group link fields into a single object “Buttons/Links” if supported (widget: object).
+- Put the most-used fields at top: Title, Date, Hours, Location, Description, Status.
+- Set sensible defaults: status=Upcoming.
+
+5) Add “Preview” buttons inside the CMS:
+- Add a read-only field or UI hint that shows:
+  - Event URL: /events/{slug}
+  - Gallery URL: /gallery/{slug}
+- If possible, add a preview link button in the editor sidebar.
+
+DELIVERABLES:
+- Update client/public/admin/config.yml with the simplified fields, auto-slug, and better labels/hints.
+- Ensure /admin works on the Netlify domain and Publish creates GitHub commits.
+- Update site code to use import.meta.glob for content loading so new entries appear automatically after rebuild.
+- Update README with “Editor workflow” steps (no git, no Replit).

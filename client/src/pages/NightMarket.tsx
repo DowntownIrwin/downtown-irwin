@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, Moon, Users, Utensils, Sparkles, Loader2, ExternalLink, Ticket } from "lucide-react";
 import { Link } from "wouter";
 import { useEventsByType } from "@/hooks/useCMS";
+import { getEventUrls } from "@/lib/content";
 import { SEO } from "@/components/SEO";
 
 export default function NightMarket() {
@@ -142,30 +143,37 @@ export default function NightMarket() {
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-3">
-                    {event.vendorUrl && (
-                      <a href={event.vendorUrl} target="_blank" rel="noopener noreferrer">
-                        <Button variant="secondary" data-testid="button-vendor-signup">
-                          <Users className="h-4 w-4 mr-2" />
-                          Become a Vendor
-                        </Button>
-                      </a>
-                    )}
-                    {event.sponsorUrl && (
-                      <a href={event.sponsorUrl} target="_blank" rel="noopener noreferrer">
-                        <Button variant="outline" className="border-white text-white hover:bg-white/10" data-testid="button-sponsor">
-                          <ExternalLink className="h-4 w-4 mr-2" />
-                          Sponsor
-                        </Button>
-                      </a>
-                    )}
-                    {event.attendeeUrl && (
-                      <a href={event.attendeeUrl} target="_blank" rel="noopener noreferrer">
-                        <Button variant="secondary" data-testid="button-register">
-                          <Ticket className="h-4 w-4 mr-2" />
-                          RSVP
-                        </Button>
-                      </a>
-                    )}
+                    {(() => {
+                      const urls = getEventUrls(event);
+                      return (
+                        <>
+                          {urls.vendorUrl && (
+                            <a href={urls.vendorUrl} target="_blank" rel="noopener noreferrer">
+                              <Button variant="secondary" data-testid="button-vendor-signup">
+                                <Users className="h-4 w-4 mr-2" />
+                                Become a Vendor
+                              </Button>
+                            </a>
+                          )}
+                          {urls.sponsorUrl && (
+                            <a href={urls.sponsorUrl} target="_blank" rel="noopener noreferrer">
+                              <Button variant="outline" className="border-white text-white hover:bg-white/10" data-testid="button-sponsor">
+                                <ExternalLink className="h-4 w-4 mr-2" />
+                                Sponsor
+                              </Button>
+                            </a>
+                          )}
+                          {urls.attendeeUrl && (
+                            <a href={urls.attendeeUrl} target="_blank" rel="noopener noreferrer">
+                              <Button variant="secondary" data-testid="button-register">
+                                <Ticket className="h-4 w-4 mr-2" />
+                                RSVP
+                              </Button>
+                            </a>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               </CardContent>

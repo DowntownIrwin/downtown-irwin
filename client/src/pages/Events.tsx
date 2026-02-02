@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Calendar, MapPin, Clock, Loader2, Users, ExternalLink, Ticket, Search } from "lucide-react";
 import { Link } from "wouter";
 import { useEvents } from "@/hooks/useCMS";
-import { groupEventsByStatus, type CMSEvent } from "@/lib/content";
+import { groupEventsByStatus, getEventUrls, type CMSEvent } from "@/lib/content";
 import { SEO } from "@/components/SEO";
 
 function EventCard({ event }: { event: CMSEvent }) {
@@ -77,30 +77,37 @@ function EventCard({ event }: { event: CMSEvent }) {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {event.vendorUrl && (
-            <a href={event.vendorUrl} target="_blank" rel="noopener noreferrer">
-              <Button size="sm" variant="outline" data-testid={`button-vendor-${event.slug}`}>
-                <Users className="h-4 w-4 mr-1" />
-                Vendor Signup
-              </Button>
-            </a>
-          )}
-          {event.sponsorUrl && (
-            <a href={event.sponsorUrl} target="_blank" rel="noopener noreferrer">
-              <Button size="sm" variant="outline" data-testid={`button-sponsor-${event.slug}`}>
-                <ExternalLink className="h-4 w-4 mr-1" />
-                Sponsor
-              </Button>
-            </a>
-          )}
-          {event.attendeeUrl && (
-            <a href={event.attendeeUrl} target="_blank" rel="noopener noreferrer">
-              <Button size="sm" data-testid={`button-register-${event.slug}`}>
-                <Ticket className="h-4 w-4 mr-1" />
-                Register
-              </Button>
-            </a>
-          )}
+          {(() => {
+            const urls = getEventUrls(event);
+            return (
+              <>
+                {urls.vendorUrl && (
+                  <a href={urls.vendorUrl} target="_blank" rel="noopener noreferrer">
+                    <Button size="sm" variant="outline" data-testid={`button-vendor-${event.slug}`}>
+                      <Users className="h-4 w-4 mr-1" />
+                      Vendor Signup
+                    </Button>
+                  </a>
+                )}
+                {urls.sponsorUrl && (
+                  <a href={urls.sponsorUrl} target="_blank" rel="noopener noreferrer">
+                    <Button size="sm" variant="outline" data-testid={`button-sponsor-${event.slug}`}>
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      Sponsor
+                    </Button>
+                  </a>
+                )}
+                {urls.attendeeUrl && (
+                  <a href={urls.attendeeUrl} target="_blank" rel="noopener noreferrer">
+                    <Button size="sm" data-testid={`button-register-${event.slug}`}>
+                      <Ticket className="h-4 w-4 mr-1" />
+                      Register
+                    </Button>
+                  </a>
+                )}
+              </>
+            );
+          })()}
         </div>
       </CardContent>
     </Card>
