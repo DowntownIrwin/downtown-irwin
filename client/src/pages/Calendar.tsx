@@ -1,9 +1,14 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar as CalendarIcon, ExternalLink } from "lucide-react";
-import { EXTERNAL_URLS } from "@shared/types";
+import { Calendar as CalendarIcon, ExternalLink, Loader2 } from "lucide-react";
+import { useSiteConfig } from "@/hooks/useCMS";
 import { SEO } from "@/components/SEO";
 
 export default function Calendar() {
+  const { data: siteConfig, isLoading } = useSiteConfig();
+
+  const hasEmbed = siteConfig?.events_calendar_embed && 
+    siteConfig.events_calendar_embed.trim() !== "";
+
   return (
     <div className="py-12 md:py-16">
       <SEO 
@@ -20,26 +25,32 @@ export default function Calendar() {
           </p>
         </div>
 
-        <Card className="mb-8">
-          <CardContent className="p-6">
-            <div className="aspect-video bg-muted rounded-lg flex flex-col items-center justify-center text-center p-8">
-              <CalendarIcon className="h-16 w-16 text-muted-foreground/50 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Calendar Embed Placeholder</h3>
-              <p className="text-muted-foreground mb-4 max-w-md">
-                Replace this placeholder with your EventsCalendar.co embed code.
-              </p>
-              <div className="bg-background rounded-md p-4 text-left w-full max-w-lg">
-                <code className="text-sm text-muted-foreground break-all">
-                  {`<!-- EventsCalendar.co Embed Code -->`}
-                  <br />
-                  {`<!-- Embed ID: ${EXTERNAL_URLS.eventsCalendarEmbed} -->`}
-                  <br />
-                  {`<iframe src="https://eventscalendar.co/embed/YOUR_ID" ...></iframe>`}
-                </code>
+        {isLoading ? (
+          <div className="flex justify-center items-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : hasEmbed ? (
+          <Card className="mb-8">
+            <CardContent className="p-6">
+              <div 
+                className="w-full min-h-[600px]"
+                dangerouslySetInnerHTML={{ __html: siteConfig.events_calendar_embed }}
+              />
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="mb-8">
+            <CardContent className="p-6">
+              <div className="aspect-video bg-muted rounded-lg flex flex-col items-center justify-center text-center p-8">
+                <CalendarIcon className="h-16 w-16 text-muted-foreground/50 mb-4" />
+                <h3 className="text-xl font-semibold mb-2">Calendar Coming Soon</h3>
+                <p className="text-muted-foreground mb-4 max-w-md">
+                  Our event calendar is being set up. Check back soon or visit our Events page for upcoming activities.
+                </p>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="bg-accent rounded-lg p-6 text-center">
           <h3 className="font-semibold mb-2">Subscribe to Our Calendar</h3>

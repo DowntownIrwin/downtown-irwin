@@ -1,15 +1,77 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Store, FileText, CheckCircle, ExternalLink } from "lucide-react";
-import { EXTERNAL_URLS } from "@shared/types";
+import { Badge } from "@/components/ui/badge";
+import { Store, FileText, CheckCircle, ExternalLink, Users, Loader2, Calendar } from "lucide-react";
+import { Link } from "wouter";
+import { useEvents } from "@/hooks/useCMS";
+import type { CMSEvent } from "@shared/types";
 import { SEO } from "@/components/SEO";
 
+function EventVendorCard({ event }: { event: CMSEvent }) {
+  const statusColors = {
+    open: "bg-green-500",
+    upcoming: "bg-blue-500",
+    closed: "bg-gray-500",
+  };
+
+  const statusLabels = {
+    open: "Accepting Vendors",
+    upcoming: "Coming Soon",
+    closed: "Closed",
+  };
+
+  return (
+    <Card className="hover-elevate" data-testid={`card-vendor-event-${event.slug}`}>
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <div>
+            <h3 className="font-semibold text-lg">{event.title}</h3>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+              <Calendar className="h-4 w-4" />
+              <span>{event.date}</span>
+            </div>
+          </div>
+          <Badge className={statusColors[event.status]}>
+            {statusLabels[event.status]}
+          </Badge>
+        </div>
+        
+        {event.vendor_cap !== undefined && (
+          <div className="text-sm text-muted-foreground mb-4">
+            <span className="font-medium">{event.vendor_count || 0}</span> / {event.vendor_cap} vendor spots filled
+          </div>
+        )}
+
+        {event.vendor_signup_url ? (
+          <a href={event.vendor_signup_url} target="_blank" rel="noopener noreferrer">
+            <Button className="w-full" disabled={event.status === "closed"} data-testid={`button-vendor-${event.slug}`}>
+              <Users className="h-4 w-4 mr-2" />
+              Apply for This Event
+              <ExternalLink className="ml-2 h-4 w-4" />
+            </Button>
+          </a>
+        ) : (
+          <Link href={`/events/${event.slug}`}>
+            <Button variant="outline" className="w-full" data-testid={`button-details-${event.slug}`}>
+              View Event Details
+            </Button>
+          </Link>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Vendors() {
+  const { data: events, isLoading } = useEvents();
+  
+  const vendorEvents = events?.filter(e => e.vendor_signup_url || e.status === "open") || [];
+
   return (
     <div className="py-12 md:py-16">
       <SEO 
         title="Become a Vendor" 
-        description="Join Downtown Irwin community events as a vendor! Apply to sell at the Irwin Car Cruise, farmers markets, and seasonal festivals."
+        description="Join Downtown Irwin community events as a vendor! Apply to sell at the Irwin Car Cruise, Street Market, Night Market, and seasonal festivals."
         path="/vendors"
       />
       <div className="container mx-auto px-4">
@@ -20,6 +82,21 @@ export default function Vendors() {
             delicious food, or unique products, we'd love to have you at our events.
           </p>
         </div>
+
+        {isLoading ? (
+          <div className="flex justify-center items-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : vendorEvents.length > 0 ? (
+          <section className="mb-12">
+            <h2 className="text-2xl font-bold mb-6">Apply for Upcoming Events</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {vendorEvents.map((event) => (
+                <EventVendorCard key={event.id} event={event} />
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <div className="grid lg:grid-cols-2 gap-8 mb-12">
           <Card>
@@ -34,27 +111,29 @@ export default function Vendors() {
                 Our events draw thousands of visitors, providing excellent exposure 
                 for your business.
               </p>
-              <h3 className="font-semibold mb-3">Available Events:</h3>
+              <h3 className="font-semibold mb-3">Featured Events:</h3>
               <ul className="space-y-2 text-muted-foreground mb-6">
                 <li className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-primary shrink-0" />
-                  <span>Irwin Car Cruise (Annual)</span>
+                  <Link href="/car-cruise">
+                    <span className="hover:text-foreground cursor-pointer">Irwin Car Cruise (Annual)</span>
+                  </Link>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-primary shrink-0" />
-                  <span>Spring Festival</span>
+                  <Link href="/street-market">
+                    <span className="hover:text-foreground cursor-pointer">Street Market</span>
+                  </Link>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-primary shrink-0" />
-                  <span>Summer Farmers Market (Weekly)</span>
+                  <Link href="/night-market">
+                    <span className="hover:text-foreground cursor-pointer">Night Market</span>
+                  </Link>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-primary shrink-0" />
-                  <span>Fall Harvest Festival</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-primary shrink-0" />
-                  <span>Holiday Market</span>
+                  <span>Seasonal Festivals</span>
                 </li>
               </ul>
             </CardContent>
@@ -67,21 +146,20 @@ export default function Vendors() {
               </div>
               <h2 className="text-2xl font-bold mb-4">How to Apply</h2>
               <p className="text-muted-foreground mb-6">
-                Ready to join us? Complete our vendor application form to get started. 
-                Our team will review your application and get back to you with next steps.
+                Each event has its own vendor application. Select an event above to apply, 
+                or browse our Events page to see all upcoming opportunities.
               </p>
               
               <div className="bg-accent rounded-lg p-4 mb-6">
-                <h4 className="font-semibold mb-2 text-sm">Which event are you applying for?</h4>
+                <h4 className="font-semibold mb-2 text-sm">Per-Event Applications</h4>
                 <p className="text-sm text-muted-foreground">
-                  When completing the application, please specify which event(s) you'd 
-                  like to participate in. Each event has different booth sizes, pricing, 
-                  and requirements. Our team will provide event-specific details after 
-                  reviewing your application.
+                  Vendor applications are specific to each event. Each has different booth 
+                  sizes, pricing, and requirements. Select an event to see its specific 
+                  vendor application.
                 </p>
               </div>
 
-              <h3 className="font-semibold mb-3">Application Requirements:</h3>
+              <h3 className="font-semibold mb-3">General Requirements:</h3>
               <ul className="space-y-2 text-muted-foreground mb-6">
                 <li className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-primary shrink-0" />
@@ -101,19 +179,11 @@ export default function Vendors() {
                 </li>
               </ul>
 
-              <a 
-                href={EXTERNAL_URLS.vendorSignupForm}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Button size="lg" className="w-full" data-testid="button-vendor-apply">
-                  Apply to Be a Vendor
-                  <ExternalLink className="ml-2 h-4 w-4" />
+              <Link href="/events">
+                <Button size="lg" className="w-full" data-testid="button-browse-events">
+                  Browse All Events
                 </Button>
-              </a>
-              <p className="text-xs text-muted-foreground text-center mt-3">
-                Opens external application form
-              </p>
+              </Link>
             </CardContent>
           </Card>
         </div>
@@ -125,11 +195,11 @@ export default function Vendors() {
               Our vendor coordinator is here to help! Contact us with any questions 
               about booth fees, setup requirements, or event details.
             </p>
-            <a href="/contact">
+            <Link href="/contact">
               <Button variant="secondary" size="lg" data-testid="button-vendor-contact">
                 Contact Vendor Coordinator
               </Button>
-            </a>
+            </Link>
           </CardContent>
         </Card>
       </div>

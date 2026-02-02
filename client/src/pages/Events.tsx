@@ -1,71 +1,32 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, Clock, Loader2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import type { Event } from "@shared/types";
-import { EXTERNAL_URLS } from "@shared/types";
+import { Button } from "@/components/ui/button";
+import { Calendar, MapPin, Clock, Loader2, Users, ExternalLink, Ticket } from "lucide-react";
+import { Link } from "wouter";
+import { useEvents } from "@/hooks/useCMS";
+import { groupEventsByStatus } from "@/lib/cms";
+import type { CMSEvent } from "@shared/types";
 import { SEO } from "@/components/SEO";
 
-async function parseGoogleSheetsData(text: string): Promise<Event[]> {
-  try {
-    const jsonString = text.replace(/^[^(]+\(/, '').replace(/\);?$/, '');
-    const data = JSON.parse(jsonString);
-    const rows = data.table.rows;
-    
-    return rows.slice(1).map((row: { c: Array<{ v: string } | null> }, index: number) => ({
-      id: String(index + 1),
-      title: row.c[0]?.v || '',
-      date: row.c[1]?.v || '',
-      time: row.c[2]?.v || undefined,
-      location: row.c[3]?.v || undefined,
-      description: row.c[4]?.v || '',
-      imageUrl: row.c[5]?.v || undefined,
-      featured: row.c[6]?.v === 'TRUE' || row.c[6]?.v === 'true',
-    })).filter((e: Event) => e.title);
-  } catch (error) {
-    console.error('Error parsing Google Sheets data:', error);
-    return [];
-  }
-}
+function EventCard({ event }: { event: CMSEvent }) {
+  const statusColors = {
+    open: "bg-green-500",
+    upcoming: "bg-blue-500",
+    closed: "bg-gray-500",
+  };
 
-async function fetchFromGoogleSheets(): Promise<Event[]> {
-  const response = await fetch(EXTERNAL_URLS.eventsGoogleSheetJson);
-  if (!response.ok) throw new Error('Failed to fetch from Google Sheets');
-  const text = await response.text();
-  return parseGoogleSheetsData(text);
-}
+  const statusLabels = {
+    open: "Open",
+    upcoming: "Upcoming",
+    closed: "Closed",
+  };
 
-async function fetchFromAPI(): Promise<Event[]> {
-  const response = await fetch('/api/events');
-  if (!response.ok) throw new Error('Failed to fetch from API');
-  return response.json();
-}
-
-async function fetchEvents(): Promise<Event[]> {
-  try {
-    const events = await fetchFromGoogleSheets();
-    if (events.length > 0) {
-      return events;
-    }
-  } catch (error) {
-    console.log('Google Sheets fetch failed, using API fallback:', error);
-  }
-  
-  try {
-    return await fetchFromAPI();
-  } catch (error) {
-    console.error('API fallback also failed:', error);
-    return [];
-  }
-}
-
-function EventCard({ event }: { event: Event }) {
   return (
-    <Card className="hover-elevate overflow-hidden" data-testid={`card-event-${event.id}`}>
-      {event.imageUrl && (
+    <Card className="hover-elevate overflow-hidden" data-testid={`card-event-${event.slug}`}>
+      {event.image_url && (
         <div className="aspect-video bg-muted overflow-hidden">
           <img 
-            src={event.imageUrl} 
+            src={event.image_url} 
             alt={event.title}
             className="w-full h-full object-cover"
           />
@@ -73,13 +34,22 @@ function EventCard({ event }: { event: Event }) {
       )}
       <CardContent className="p-6">
         <div className="flex items-center gap-2 mb-3">
-          {event.featured && (
-            <Badge variant="default" className="text-xs">Featured</Badge>
-          )}
+          <Badge className={statusColors[event.status]}>
+            {statusLabels[event.status]}
+          </Badge>
         </div>
-        <h3 className="font-semibold text-lg mb-2">{event.title}</h3>
-        <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{event.description}</p>
-        <div className="space-y-2 text-sm text-muted-foreground">
+        
+        <Link href={`/events/${event.slug}`}>
+          <h3 className="font-semibold text-lg mb-2 hover:text-primary cursor-pointer">
+            {event.title}
+          </h3>
+        </Link>
+        
+        <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+          {event.description}
+        </p>
+        
+        <div className="space-y-2 text-sm text-muted-foreground mb-4">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 shrink-0" />
             <span>{event.date}</span>
@@ -97,16 +67,62 @@ function EventCard({ event }: { event: Event }) {
             </div>
           )}
         </div>
+
+        <div className="flex flex-wrap gap-2">
+          {event.vendor_signup_url && (
+            <a href={event.vendor_signup_url} target="_blank" rel="noopener noreferrer">
+              <Button size="sm" variant="outline" data-testid={`button-vendor-${event.slug}`}>
+                <Users className="h-4 w-4 mr-1" />
+                Vendor Signup
+              </Button>
+            </a>
+          )}
+          {event.sponsor_url && (
+            <a href={event.sponsor_url} target="_blank" rel="noopener noreferrer">
+              <Button size="sm" variant="outline" data-testid={`button-sponsor-${event.slug}`}>
+                <ExternalLink className="h-4 w-4 mr-1" />
+                Sponsor
+              </Button>
+            </a>
+          )}
+          {event.register_url && (
+            <a href={event.register_url} target="_blank" rel="noopener noreferrer">
+              <Button size="sm" data-testid={`button-register-${event.slug}`}>
+                <Ticket className="h-4 w-4 mr-1" />
+                Register
+              </Button>
+            </a>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
 }
 
+function EventSection({ title, events, emptyMessage }: { 
+  title: string; 
+  events: CMSEvent[]; 
+  emptyMessage: string;
+}) {
+  if (events.length === 0) return null;
+
+  return (
+    <section className="mb-12">
+      <h2 className="text-2xl font-bold mb-6">{title}</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {events.map((event) => (
+          <EventCard key={event.id} event={event} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function Events() {
-  const { data: events, isLoading, error } = useQuery({
-    queryKey: ['events'],
-    queryFn: fetchEvents,
-  });
+  const { data: events, isLoading, error } = useEvents();
+  
+  const grouped = events ? groupEventsByStatus(events) : { open: [], upcoming: [], closed: [] };
+  const hasEvents = events && events.length > 0;
 
   return (
     <div className="py-12 md:py-16">
@@ -128,7 +144,7 @@ export default function Events() {
           <div className="flex justify-center items-center py-16">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
-        ) : error || !events?.length ? (
+        ) : error || !hasEvents ? (
           <div className="text-center py-16">
             <Calendar className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
             <h3 className="text-xl font-semibold mb-2">No Events Found</h3>
@@ -137,11 +153,23 @@ export default function Events() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {events.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </div>
+          <>
+            <EventSection 
+              title="Open for Registration" 
+              events={grouped.open}
+              emptyMessage="No events currently open"
+            />
+            <EventSection 
+              title="Upcoming Events" 
+              events={grouped.upcoming}
+              emptyMessage="No upcoming events"
+            />
+            <EventSection 
+              title="Past Events" 
+              events={grouped.closed}
+              emptyMessage="No past events"
+            />
+          </>
         )}
       </div>
     </div>

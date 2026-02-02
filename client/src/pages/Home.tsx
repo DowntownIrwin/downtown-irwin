@@ -1,23 +1,26 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, Users, Car, MapPin, ArrowRight, Megaphone } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import type { AdminData } from "@shared/types";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, Users, Car, MapPin, ArrowRight, ShoppingBag, Moon } from "lucide-react";
+import { useEvents, useSiteConfig } from "@/hooks/useCMS";
+import { groupEventsByStatus } from "@/lib/cms";
 import { SEO } from "@/components/SEO";
 
 function HeroSection() {
+  const { data: siteConfig } = useSiteConfig();
+
   return (
     <section className="relative bg-primary text-primary-foreground overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-primary/80" />
       <div className="relative container mx-auto px-4 py-20 md:py-28">
         <div className="max-w-3xl">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-            Welcome to<br />Downtown Irwin
+            {siteConfig?.hero_title || "Welcome to Downtown Irwin"}
           </h1>
           <p className="text-lg md:text-xl opacity-90 mb-8 max-w-2xl">
-            The Irwin Business & Professional Association brings our community together 
-            through vibrant events, local businesses, and the famous Irwin Car Cruise.
+            {siteConfig?.hero_subtitle || 
+              "The Irwin Business & Professional Association brings our community together through vibrant events, local businesses, and the famous Irwin Car Cruise."}
           </p>
           <div className="flex flex-wrap gap-4">
             <Link href="/events">
@@ -33,32 +36,6 @@ function HeroSection() {
             </Link>
           </div>
         </div>
-      </div>
-    </section>
-  );
-}
-
-function AnnouncementBanner() {
-  const { data } = useQuery<AdminData>({
-    queryKey: ['/api/admin/data'],
-  });
-
-  const activeAnnouncements = data?.announcements?.filter(a => a.active) || [];
-
-  if (activeAnnouncements.length === 0) return null;
-
-  return (
-    <section className="bg-accent border-b">
-      <div className="container mx-auto px-4 py-4">
-        {activeAnnouncements.map((announcement) => (
-          <div key={announcement.id} className="flex items-start gap-3">
-            <Megaphone className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-            <div>
-              <span className="font-semibold">{announcement.title}:</span>{" "}
-              <span className="text-muted-foreground">{announcement.content}</span>
-            </div>
-          </div>
-        ))}
       </div>
     </section>
   );
@@ -81,18 +58,18 @@ function FeaturesSection() {
       linkText: "Learn More",
     },
     {
-      icon: Users,
-      title: "Local Businesses",
-      description: "Support our community of shops, restaurants, and services that make Irwin special.",
-      link: "/vendors",
-      linkText: "Become a Vendor",
+      icon: ShoppingBag,
+      title: "Street Market",
+      description: "Shop local vendors and artisans at our vibrant street market events.",
+      link: "/street-market",
+      linkText: "Explore",
     },
     {
-      icon: MapPin,
-      title: "Sponsor Opportunities",
-      description: "Partner with us to support community events and grow your brand visibility.",
-      link: "/sponsors",
-      linkText: "Sponsor Now",
+      icon: Moon,
+      title: "Night Market",
+      description: "Experience Downtown Irwin after dark with unique evening shopping and entertainment.",
+      link: "/night-market",
+      linkText: "Discover",
     },
   ];
 
@@ -100,7 +77,7 @@ function FeaturesSection() {
     <section className="py-16 md:py-24">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Get Involved</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Our Signature Events</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Whether you're a resident, business owner, or visitor, there are many ways 
             to be part of the Downtown Irwin community.
@@ -131,20 +108,19 @@ function FeaturesSection() {
   );
 }
 
-function FeaturedEventsSection() {
-  const { data } = useQuery<AdminData>({
-    queryKey: ['/api/admin/data'],
-  });
+function UpcomingEventsSection() {
+  const { data: events } = useEvents();
+  const grouped = events ? groupEventsByStatus(events) : { open: [], upcoming: [], closed: [] };
+  
+  const upcomingEvents = [...grouped.open, ...grouped.upcoming].slice(0, 3);
 
-  const featuredEvents = data?.featuredEvents || [];
-
-  if (featuredEvents.length === 0) return null;
+  if (upcomingEvents.length === 0) return null;
 
   return (
     <section className="py-16 bg-card">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold">Featured Events</h2>
+          <h2 className="text-2xl md:text-3xl font-bold">Upcoming Events</h2>
           <Link href="/events">
             <Button variant="ghost" data-testid="button-view-all-events">
               View All
@@ -154,14 +130,70 @@ function FeaturedEventsSection() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredEvents.slice(0, 3).map((event) => (
-            <Card key={event.id} className="hover-elevate">
-              <CardContent className="p-6">
-                <div className="text-sm text-primary font-medium mb-2">{event.date}</div>
-                <h3 className="font-semibold text-lg mb-2">{event.title}</h3>
-                <p className="text-sm text-muted-foreground">{event.description}</p>
-              </CardContent>
-            </Card>
+          {upcomingEvents.map((event) => (
+            <Link key={event.id} href={`/events/${event.slug}`}>
+              <Card className="hover-elevate cursor-pointer h-full" data-testid={`card-event-${event.slug}`}>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Badge variant={event.status === "open" ? "default" : "secondary"}>
+                      {event.status === "open" ? "Open" : "Upcoming"}
+                    </Badge>
+                  </div>
+                  <div className="text-sm text-primary font-medium mb-2">{event.date}</div>
+                  <h3 className="font-semibold text-lg mb-2">{event.title}</h3>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{event.description}</p>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function GetInvolvedSection() {
+  const items = [
+    {
+      icon: Users,
+      title: "Become a Vendor",
+      description: "Sell your products at our events",
+      link: "/vendors",
+    },
+    {
+      icon: MapPin,
+      title: "Become a Sponsor",
+      description: "Support community events",
+      link: "/sponsors",
+    },
+  ];
+
+  return (
+    <section className="py-16">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Get Involved</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Partner with Downtown Irwin to grow your business and support our community.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+          {items.map((item) => (
+            <Link key={item.title} href={item.link}>
+              <Card className="hover-elevate cursor-pointer h-full">
+                <CardContent className="p-6 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <item.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground">{item.description}</p>
+                  </div>
+                  <ArrowRight className="h-5 w-5 text-muted-foreground ml-auto" />
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       </div>
@@ -197,13 +229,13 @@ export default function Home() {
     <>
       <SEO 
         title="Home" 
-        description="Downtown Irwin and the Irwin Business & Professional Association bring community together through events, the Irwin Car Cruise, local vendors, and sponsors."
+        description="Downtown Irwin and the Irwin Business & Professional Association bring community together through events, the Irwin Car Cruise, Street Market, Night Market, and more."
         path="/"
       />
       <HeroSection />
-      <AnnouncementBanner />
       <FeaturesSection />
-      <FeaturedEventsSection />
+      <UpcomingEventsSection />
+      <GetInvolvedSection />
       <CTASection />
     </>
   );

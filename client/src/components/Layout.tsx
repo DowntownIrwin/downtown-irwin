@@ -1,18 +1,28 @@
 import { Link, useLocation } from "wouter";
-import { Menu, X, MapPin, Mail, Phone, Facebook, Instagram } from "lucide-react";
+import { Menu, MapPin, Mail, Phone, Facebook, Instagram } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { useState } from "react";
 
-const navLinks = [
+const mainNavLinks = [
   { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
   { href: "/events", label: "Events" },
   { href: "/calendar", label: "Calendar" },
   { href: "/vendors", label: "Vendors" },
   { href: "/sponsors", label: "Sponsors" },
-  { href: "/car-cruise", label: "Irwin Car Cruise" },
   { href: "/contact", label: "Contact" },
+];
+
+const hubLinks = [
+  { href: "/car-cruise", label: "Car Cruise" },
+  { href: "/street-market", label: "Street Market" },
+  { href: "/night-market", label: "Night Market" },
+];
+
+const allNavLinks = [
+  ...mainNavLinks.slice(0, 2),
+  ...hubLinks,
+  ...mainNavLinks.slice(2),
 ];
 
 function NavLink({ href, label, onClick }: { href: string; label: string; onClick?: () => void }) {
@@ -36,6 +46,7 @@ function NavLink({ href, label, onClick }: { href: string; label: string; onClic
   );
 }
 
+
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -53,9 +64,13 @@ export function Header() {
           </Link>
 
           <nav className="hidden lg:flex items-center gap-6">
-            {navLinks.map((link) => (
-              <NavLink key={link.href} href={link.href} label={link.label} />
-            ))}
+            <NavLink href="/" label="Home" />
+            <NavLink href="/events" label="Events" />
+            <NavLink href="/car-cruise" label="Car Cruise" />
+            <NavLink href="/calendar" label="Calendar" />
+            <NavLink href="/vendors" label="Vendors" />
+            <NavLink href="/sponsors" label="Sponsors" />
+            <NavLink href="/contact" label="Contact" />
           </nav>
 
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -67,7 +82,7 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side="right" className="w-[280px] sm:w-[350px]">
               <div className="flex flex-col gap-4 mt-8">
-                {navLinks.map((link) => (
+                {allNavLinks.map((link) => (
                   <SheetClose key={link.href} asChild>
                     <div>
                       <NavLink
@@ -103,10 +118,19 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/about"><span className="text-muted-foreground hover:text-foreground cursor-pointer">About Us</span></Link></li>
               <li><Link href="/events"><span className="text-muted-foreground hover:text-foreground cursor-pointer">Events</span></Link></li>
-              <li><Link href="/car-cruise"><span className="text-muted-foreground hover:text-foreground cursor-pointer">Irwin Car Cruise</span></Link></li>
+              <li><Link href="/car-cruise"><span className="text-muted-foreground hover:text-foreground cursor-pointer">Car Cruise</span></Link></li>
+              <li><Link href="/street-market"><span className="text-muted-foreground hover:text-foreground cursor-pointer">Street Market</span></Link></li>
+              <li><Link href="/night-market"><span className="text-muted-foreground hover:text-foreground cursor-pointer">Night Market</span></Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-semibold mb-4">Get Involved</h4>
+            <ul className="space-y-2 text-sm">
               <li><Link href="/vendors"><span className="text-muted-foreground hover:text-foreground cursor-pointer">Become a Vendor</span></Link></li>
+              <li><Link href="/sponsors"><span className="text-muted-foreground hover:text-foreground cursor-pointer">Become a Sponsor</span></Link></li>
+              <li><Link href="/contact"><span className="text-muted-foreground hover:text-foreground cursor-pointer">Contact Us</span></Link></li>
             </ul>
           </div>
 
@@ -130,11 +154,7 @@ export function Footer() {
                 </a>
               </li>
             </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4">Follow Us</h4>
-            <div className="flex gap-4">
+            <div className="flex gap-4 mt-4">
               <a
                 href="https://facebook.com/downtownirwin"
                 target="_blank"

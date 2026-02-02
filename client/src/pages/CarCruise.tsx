@@ -1,24 +1,14 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Car, Calendar, MapPin, Music, Utensils, Users, Crown, Award, Medal, Heart, ExternalLink, Loader2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import type { CarCruiseSponsors } from "@shared/types";
-import { EXTERNAL_URLS } from "@shared/types";
+import { Car, Calendar, MapPin, Music, Utensils, Users, Crown, Award, Medal, Heart, ExternalLink, Loader2, Ticket } from "lucide-react";
 import { Link } from "wouter";
+import { useEvents, useSponsorLogos } from "@/hooks/useCMS";
+import { findCarCruiseEvent } from "@/lib/cms";
+import type { SponsorLogosData } from "@shared/types";
 import { SEO } from "@/components/SEO";
 
-async function fetchCarCruiseSponsors(): Promise<CarCruiseSponsors> {
-  try {
-    const response = await fetch(EXTERNAL_URLS.carCruiseSponsorsJson);
-    if (!response.ok) throw new Error('Failed to fetch');
-    return response.json();
-  } catch {
-    return { presenting: [], gold: [], silver: [], supporting: [] };
-  }
-}
-
-function SponsorSection({ sponsors }: { sponsors: CarCruiseSponsors }) {
+function SponsorSection({ sponsors }: { sponsors: SponsorLogosData }) {
   const allEmpty = 
     sponsors.presenting.length === 0 && 
     sponsors.gold.length === 0 && 
@@ -40,7 +30,6 @@ function SponsorSection({ sponsors }: { sponsors: CarCruiseSponsors }) {
     { key: 'presenting' as const, label: 'Presenting Sponsors', icon: Crown, color: 'bg-amber-500', sponsors: sponsors.presenting },
     { key: 'gold' as const, label: 'Gold Sponsors', icon: Award, color: 'bg-yellow-500', sponsors: sponsors.gold },
     { key: 'silver' as const, label: 'Silver Sponsors', icon: Medal, color: 'bg-slate-400', sponsors: sponsors.silver },
-    { key: 'supporting' as const, label: 'Supporting Sponsors', icon: Heart, color: 'bg-primary', sponsors: sponsors.supporting },
   ];
 
   return (
@@ -61,19 +50,19 @@ function SponsorSection({ sponsors }: { sponsors: CarCruiseSponsors }) {
                 <h3 className="text-xl font-semibold">{tier.label}</h3>
               </div>
               <div className="flex flex-wrap justify-center gap-6">
-                {tier.sponsors.map((sponsor) => (
+                {tier.sponsors.map((sponsor, index) => (
                   <a
-                    key={sponsor.id}
+                    key={index}
                     href={sponsor.website || '#'}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block"
-                    data-testid={`link-sponsor-${sponsor.id}`}
+                    data-testid={`link-sponsor-${tier.key}-${index}`}
                   >
                     <Card className="hover-elevate p-4 min-w-[150px] text-center">
-                      {sponsor.logoUrl ? (
+                      {sponsor.logo_url ? (
                         <img 
-                          src={sponsor.logoUrl} 
+                          src={sponsor.logo_url} 
                           alt={sponsor.name}
                           className="h-16 w-auto mx-auto mb-2 object-contain"
                         />
@@ -92,16 +81,41 @@ function SponsorSection({ sponsors }: { sponsors: CarCruiseSponsors }) {
             </div>
           );
         })}
+
+        {sponsors.supporting.length > 0 && (
+          <div className="mt-12">
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                <Heart className="h-4 w-4 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold">Supporting Sponsors</h3>
+            </div>
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-muted-foreground">
+              {sponsors.supporting.map((name, index) => (
+                <span key={index} className="text-sm">
+                  {name}{index < sponsors.supporting.length - 1 ? " •" : ""}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
 }
 
 export default function CarCruise() {
-  const { data: sponsors, isLoading } = useQuery({
-    queryKey: ['car-cruise-sponsors'],
-    queryFn: fetchCarCruiseSponsors,
-  });
+  const { data: events, isLoading: eventsLoading } = useEvents();
+  const { data: sponsors, isLoading: sponsorsLoading } = useSponsorLogos();
+  
+  const event = events ? findCarCruiseEvent(events) : undefined;
+  const isLoading = eventsLoading || sponsorsLoading;
+
+  const statusLabels = {
+    open: "Registration Open",
+    upcoming: "Coming Soon",
+    closed: "Event Ended",
+  };
 
   return (
     <div>
@@ -122,16 +136,34 @@ export default function CarCruise() {
               Join us for the biggest car cruise in the region! Classic cars, live music, 
               delicious food, and family fun in the heart of Downtown Irwin.
             </p>
-            <div className="flex flex-wrap gap-6 text-sm">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                <span>Coming Summer 2026</span>
+            {isLoading ? (
+              <Loader2 className="h-6 w-6 animate-spin" />
+            ) : event ? (
+              <div className="flex flex-wrap gap-6 text-sm">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  <span>{event.date}</span>
+                </div>
+                {event.location && (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5" />
+                    <span>{event.location}</span>
+                  </div>
+                )}
+                <Badge variant="secondary">{statusLabels[event.status]}</Badge>
               </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                <span>Main Street, Irwin PA</span>
+            ) : (
+              <div className="flex flex-wrap gap-6 text-sm">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  <span>Coming Summer 2026</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  <span>Main Street, Irwin PA</span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </section>
@@ -243,26 +275,73 @@ export default function CarCruise() {
         <SponsorSection sponsors={sponsors || { presenting: [], gold: [], silver: [], supporting: [] }} />
       )}
 
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <Card className="bg-primary text-primary-foreground">
-            <CardContent className="p-8 md:p-12 text-center">
-              <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                Register Your Vehicle
-              </h2>
-              <p className="opacity-90 mb-6 max-w-2xl mx-auto">
-                Want to show off your classic car at the Irwin Car Cruise? 
-                Registration will open in Spring 2026. Contact us to get notified!
-              </p>
-              <Link href="/contact">
-                <Button size="lg" variant="secondary" data-testid="button-register-vehicle">
-                  Get Notified
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
+      {event && (
+        <section className="py-12 border-t">
+          <div className="container mx-auto px-4">
+            <Card className="bg-accent">
+              <CardContent className="p-8 md:p-12">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div>
+                    <h2 className="text-2xl font-bold mb-2">Get Involved</h2>
+                    <p className="text-muted-foreground">
+                      Register your vehicle, become a vendor, or sponsor the event!
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    {event.register_url && (
+                      <a href={event.register_url} target="_blank" rel="noopener noreferrer">
+                        <Button data-testid="button-register-vehicle">
+                          <Ticket className="h-4 w-4 mr-2" />
+                          Register Vehicle
+                        </Button>
+                      </a>
+                    )}
+                    {event.vendor_signup_url && (
+                      <a href={event.vendor_signup_url} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" data-testid="button-vendor-signup">
+                          <Users className="h-4 w-4 mr-2" />
+                          Vendor Signup
+                        </Button>
+                      </a>
+                    )}
+                    {event.sponsor_url && (
+                      <a href={event.sponsor_url} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" data-testid="button-sponsor-event">
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Sponsor
+                        </Button>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+      )}
+
+      {!event && (
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <Card className="bg-primary text-primary-foreground">
+              <CardContent className="p-8 md:p-12 text-center">
+                <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                  Register Your Vehicle
+                </h2>
+                <p className="opacity-90 mb-6 max-w-2xl mx-auto">
+                  Want to show off your classic car at the Irwin Car Cruise? 
+                  Registration will open in Spring 2026. Contact us to get notified!
+                </p>
+                <Link href="/contact">
+                  <Button size="lg" variant="secondary" data-testid="button-get-notified">
+                    Get Notified
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

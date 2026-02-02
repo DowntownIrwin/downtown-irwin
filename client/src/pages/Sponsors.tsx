@@ -1,98 +1,40 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Crown, Award, Medal, Heart, ExternalLink, CheckCircle } from "lucide-react";
-import { EXTERNAL_URLS } from "@shared/types";
+import { Crown, Award, Medal, Heart, ExternalLink, CheckCircle, Loader2 } from "lucide-react";
+import { useSponsorTiers, useSponsorLogos } from "@/hooks/useCMS";
+import type { SponsorTier, SponsorLogosData } from "@shared/types";
 import { SEO } from "@/components/SEO";
 
-const sponsorshipTiers = [
-  {
-    name: "Presenting Sponsor",
-    price: "$2,500",
-    icon: Crown,
-    color: "bg-amber-500",
-    badge: "Most Popular",
-    url: EXTERNAL_URLS.sponsorSquarePresenting,
-    benefits: [
-      "Premier logo placement on all event materials",
-      "Exclusive banner placement at main stage",
-      "Featured in all press releases and media coverage",
-      "VIP tent with premium viewing area",
-      "10 event passes for staff/guests",
-      "Speaking opportunity at event opening",
-      "Social media spotlight (dedicated posts)",
-      "Logo on event t-shirts",
-      "First right of refusal for next year",
-    ],
-  },
-  {
-    name: "Gold Sponsor",
-    price: "$1,500",
-    icon: Award,
-    color: "bg-yellow-500",
-    badge: null,
-    url: EXTERNAL_URLS.sponsorSquareGold,
-    benefits: [
-      "Large logo on event banners and signage",
-      "Featured placement on event website",
-      "Included in press releases",
-      "Premium vendor booth location",
-      "6 event passes for staff/guests",
-      "Social media recognition",
-      "Logo on event programs",
-      "PA announcements during event",
-    ],
-  },
-  {
-    name: "Silver Sponsor",
-    price: "$750",
-    icon: Medal,
-    color: "bg-slate-400",
-    badge: null,
-    url: EXTERNAL_URLS.sponsorSquareSilver,
-    benefits: [
-      "Logo on event signage",
-      "Listed on event website",
-      "Standard vendor booth location",
-      "4 event passes for staff/guests",
-      "Social media mention",
-      "Logo in event program",
-      "Recognition at event",
-    ],
-  },
-  {
-    name: "Supporting Sponsor",
-    price: "$250",
-    icon: Heart,
-    color: "bg-primary",
-    badge: null,
-    url: EXTERNAL_URLS.sponsorSquareSupporting,
-    benefits: [
-      "Name listed on sponsor board",
-      "Listed on event website",
-      "2 event passes",
-      "Recognition in event program",
-      "Social media thank you",
-    ],
-  },
-];
+const tierIcons: Record<string, typeof Crown> = {
+  presenting: Crown,
+  gold: Award,
+  silver: Medal,
+  supporting: Heart,
+};
 
-function SponsorTierCard({ tier }: { tier: typeof sponsorshipTiers[0] }) {
-  const Icon = tier.icon;
+const tierColors: Record<string, string> = {
+  presenting: "bg-amber-500",
+  gold: "bg-yellow-500",
+  silver: "bg-slate-400",
+  supporting: "bg-primary",
+};
+
+function SponsorTierCard({ tier }: { tier: SponsorTier }) {
+  const tierKey = tier.name.toLowerCase().split(" ")[0];
+  const Icon = tierIcons[tierKey] || Heart;
+  const color = tierColors[tierKey] || "bg-primary";
   
   return (
-    <Card className="relative overflow-hidden" data-testid={`card-sponsor-${tier.name.toLowerCase().replace(/\s+/g, '-')}`}>
-      {tier.badge && (
-        <div className="absolute top-4 right-4">
-          <Badge variant="secondary">{tier.badge}</Badge>
-        </div>
-      )}
+    <Card className="relative overflow-hidden" data-testid={`card-tier-${tier.id}`}>
       <CardHeader className="pb-4">
-        <div className={`w-12 h-12 rounded-lg ${tier.color} flex items-center justify-center mb-4`}>
+        <div className={`w-12 h-12 rounded-lg ${color} flex items-center justify-center mb-4`}>
           <Icon className="h-6 w-6 text-white" />
         </div>
         <CardTitle className="text-xl">{tier.name}</CardTitle>
-        <div className="text-3xl font-bold text-primary">{tier.price}</div>
+        <div className="text-3xl font-bold text-primary">
+          ${tier.price.toLocaleString()}
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <ul className="space-y-2">
@@ -103,8 +45,8 @@ function SponsorTierCard({ tier }: { tier: typeof sponsorshipTiers[0] }) {
             </li>
           ))}
         </ul>
-        <a href={tier.url} target="_blank" rel="noopener noreferrer" className="block">
-          <Button className="w-full" data-testid={`button-sponsor-${tier.name.toLowerCase().replace(/\s+/g, '-')}`}>
+        <a href={tier.square_url} target="_blank" rel="noopener noreferrer" className="block">
+          <Button className="w-full" data-testid={`button-sponsor-${tier.id}`}>
             Sponsor Now
             <ExternalLink className="ml-2 h-4 w-4" />
           </Button>
@@ -114,7 +56,176 @@ function SponsorTierCard({ tier }: { tier: typeof sponsorshipTiers[0] }) {
   );
 }
 
+function SponsorLogosSection({ logos }: { logos: SponsorLogosData }) {
+  const allEmpty = 
+    logos.presenting.length === 0 && 
+    logos.gold.length === 0 && 
+    logos.silver.length === 0 && 
+    logos.supporting.length === 0;
+
+  if (allEmpty) {
+    return (
+      <section className="py-12 bg-card rounded-lg">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-2xl font-bold mb-4">Our Sponsors</h2>
+          <p className="text-muted-foreground">Sponsors to be announced soon...</p>
+        </div>
+      </section>
+    );
+  }
+
+  const tiers = [
+    { key: 'presenting' as const, label: 'Presenting Sponsors', icon: Crown, color: 'bg-amber-500', sponsors: logos.presenting },
+    { key: 'gold' as const, label: 'Gold Sponsors', icon: Award, color: 'bg-yellow-500', sponsors: logos.gold },
+    { key: 'silver' as const, label: 'Silver Sponsors', icon: Medal, color: 'bg-slate-400', sponsors: logos.silver },
+  ];
+
+  return (
+    <section className="py-12 bg-card rounded-lg">
+      <div className="container mx-auto px-4">
+        <h2 className="text-3xl font-bold text-center mb-12">Thank You to Our Sponsors</h2>
+        
+        {tiers.map((tier) => {
+          if (tier.sponsors.length === 0) return null;
+          const Icon = tier.icon;
+          
+          return (
+            <div key={tier.key} className="mb-12 last:mb-0">
+              <div className="flex items-center justify-center gap-3 mb-6">
+                <div className={`w-8 h-8 rounded-full ${tier.color} flex items-center justify-center`}>
+                  <Icon className="h-4 w-4 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold">{tier.label}</h3>
+              </div>
+              <div className="flex flex-wrap justify-center gap-6">
+                {tier.sponsors.filter(s => s && s.name).map((sponsor, index) => (
+                  <a
+                    key={index}
+                    href={sponsor.website || '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                    data-testid={`link-sponsor-${tier.key}-${index}`}
+                  >
+                    <Card className="hover-elevate p-4 min-w-[150px] text-center">
+                      {sponsor.logo_url ? (
+                        <img 
+                          src={sponsor.logo_url} 
+                          alt={sponsor.name}
+                          className="h-16 w-auto mx-auto mb-2 object-contain"
+                        />
+                      ) : (
+                        <div className="h-16 w-16 mx-auto mb-2 bg-muted rounded-lg flex items-center justify-center">
+                          <span className="text-2xl font-bold text-muted-foreground">
+                            {sponsor.name?.charAt(0) || '?'}
+                          </span>
+                        </div>
+                      )}
+                      <p className="text-sm font-medium">{sponsor.name}</p>
+                    </Card>
+                  </a>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+
+        {logos.supporting.length > 0 && (
+          <div className="mt-12">
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                <Heart className="h-4 w-4 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold">Supporting Sponsors</h3>
+            </div>
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-muted-foreground">
+              {logos.supporting.map((name, index) => (
+                <span key={index} className="text-sm">
+                  {name}{index < logos.supporting.length - 1 ? " •" : ""}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export default function Sponsors() {
+  const { data: tiers, isLoading: tiersLoading } = useSponsorTiers();
+  const { data: logos, isLoading: logosLoading } = useSponsorLogos();
+
+  const isLoading = tiersLoading || logosLoading;
+
+  const fallbackTiers: SponsorTier[] = [
+    {
+      id: "presenting",
+      name: "Presenting Sponsor",
+      price: 2500,
+      benefits: [
+        "Premier logo placement on all event materials",
+        "Exclusive banner placement at main stage",
+        "Featured in all press releases",
+        "VIP tent with premium viewing area",
+        "10 event passes",
+        "Speaking opportunity",
+      ],
+      square_url: "#",
+      order: 1,
+    },
+    {
+      id: "gold",
+      name: "Gold Sponsor",
+      price: 1500,
+      benefits: [
+        "Large logo on event banners",
+        "Featured on event website",
+        "Included in press releases",
+        "Premium vendor booth",
+        "6 event passes",
+      ],
+      square_url: "#",
+      order: 2,
+    },
+    {
+      id: "silver",
+      name: "Silver Sponsor",
+      price: 750,
+      benefits: [
+        "Logo on event signage",
+        "Listed on event website",
+        "Standard vendor booth",
+        "4 event passes",
+      ],
+      square_url: "#",
+      order: 3,
+    },
+    {
+      id: "supporting",
+      name: "Supporting Sponsor",
+      price: 250,
+      benefits: [
+        "Name on sponsor board",
+        "Listed on website",
+        "2 event passes",
+      ],
+      square_url: "#",
+      order: 4,
+    },
+  ];
+
+  const displayTiers = tiers && tiers.length > 0 
+    ? [...tiers].sort((a, b) => a.order - b.order)
+    : fallbackTiers;
+
+  const displayLogos = logos || {
+    presenting: [],
+    gold: [],
+    silver: [],
+    supporting: [],
+  };
+
   return (
     <div className="py-12 md:py-16">
       <SEO 
@@ -131,37 +242,27 @@ export default function Sponsors() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-16">
-          {sponsorshipTiers.map((tier) => (
-            <SponsorTierCard key={tier.name} tier={tier} />
-          ))}
-        </div>
-
-        <Card className="mb-12">
-          <CardContent className="p-8">
-            <h2 className="text-2xl font-bold mb-6 text-center">Why Sponsor?</h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-primary mb-2">10,000+</div>
-                <p className="text-muted-foreground">Annual Event Attendees</p>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-primary mb-2">30+</div>
-                <p className="text-muted-foreground">Years in the Community</p>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-primary mb-2">15+</div>
-                <p className="text-muted-foreground">Events Per Year</p>
-              </div>
+        {isLoading ? (
+          <div className="flex justify-center items-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-16">
+              {displayTiers.map((tier) => (
+                <SponsorTierCard key={tier.id} tier={tier} />
+              ))}
             </div>
-          </CardContent>
-        </Card>
 
-        <div className="bg-card rounded-lg p-8 text-center">
+            <SponsorLogosSection logos={displayLogos} />
+          </>
+        )}
+
+        <div className="mt-12 bg-accent rounded-lg p-8 text-center">
           <h2 className="text-2xl font-bold mb-4">Custom Sponsorship Packages</h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
             Looking for something different? We can create a custom sponsorship 
-            package tailored to your business goals and budget. Contact us to discuss options.
+            package tailored to your business goals and budget.
           </p>
           <a href="/contact">
             <Button size="lg" variant="outline" data-testid="button-custom-sponsor">
