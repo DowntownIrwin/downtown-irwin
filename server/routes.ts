@@ -2,6 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { adminDataSchema, contactFormSchema } from "@shared/schema";
+import path from "path";
+import fs from "fs";
 
 const ADMIN_PASSCODE = process.env.ADMIN_PASSCODE || "irwin2026";
 
@@ -10,6 +12,42 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   
+  // Serve Decap CMS admin page
+  app.get("/admin", (req, res, next) => {
+    const adminPath = path.resolve(
+      import.meta.dirname,
+      "..",
+      "client",
+      "public",
+      "admin",
+      "index.html"
+    );
+    if (fs.existsSync(adminPath)) {
+      res.status(200).set({ "Content-Type": "text/html" }).sendFile(adminPath);
+    } else {
+      next();
+    }
+  });
+
+  // Serve admin config.yml (multiple path patterns)
+  const serveConfigYml = (req: any, res: any, next: any) => {
+    const configPath = path.resolve(
+      import.meta.dirname,
+      "..",
+      "client",
+      "public",
+      "admin",
+      "config.yml"
+    );
+    if (fs.existsSync(configPath)) {
+      res.status(200).set({ "Content-Type": "text/yaml", "Cache-Control": "no-cache" }).sendFile(configPath);
+    } else {
+      next();
+    }
+  };
+  app.get("/admin/config.yml", serveConfigYml);
+  app.get("/config.yml", serveConfigYml);
+
   app.get("/api/admin/data", async (req, res) => {
     try {
       const data = await storage.getAdminData();
