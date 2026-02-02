@@ -1,11 +1,11 @@
 {
-  "siteName": "Downtown Irwin",
-  "tagline": "The biggest little town in Pennsylvania",
-  "contactEmail": "jmsmaligo@gmail.com",
+  "facebookUrl": "https://www.facebook.com/discoverdowntownirwin",
+  "logo": "/uploads/ibpa-logo_v3.png",
   "contactPhone": "(412) 555-0100",
+  "tagline": "The biggest little town in Pennsylvania",
+  "siteName": "Downtown Irwin",
+  "favicon": null,
   "address": "Main Street, Irwin, PA 15642",
-  "facebookUrl": "https://www.facebook.com/IrwinBusinessAndProfessionalAssociation",
-  "instagramUrl": "",
-  "logo": null,
-  "favicon": null
+  "contactEmail": "jmsmaligo@gmail.com",
+  "instagramUrl": ""
 }
