@@ -6,7 +6,7 @@ import { Calendar, Users, Car, MapPin, ArrowRight, ShoppingBag, Moon, Mail } fro
 import { useEvents } from "@/hooks/useCMS";
 import { groupEventsByStatus } from "@/lib/cms";
 import { SEO } from "@/components/SEO";
-import ibpaLogo from "@assets/IBPA_Logo_v3.png_1770041663294.avif";
+import ibpaLogo from "@assets/IBPA_Logo_v3_1770042401362.png";
 import heroBackground from "@assets/72dpi_Photo_Oct_19_2024,_5_56_10_AM_Downsized_edited_1770042251001.jpg";
 
 function HeroSection() {

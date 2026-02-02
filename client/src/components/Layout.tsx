@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Menu, MapPin, Mail, Phone, Facebook, Instagram, ChevronDown } from "lucide-react";
+import headerLogo from "@assets/IBPA_Logo_Favicon_1770042401362.jpg";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import {
@@ -60,7 +61,8 @@ export function Header() {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between gap-4">
           <Link href="/">
-            <span className="flex items-center gap-2 cursor-pointer" data-testid="logo-home-link">
+            <span className="flex items-center gap-3 cursor-pointer" data-testid="logo-home-link">
+              <img src={headerLogo} alt="IBPA" className="h-10 w-auto" />
               <div className="flex flex-col">
                 <span className="text-lg font-bold text-primary leading-tight">Downtown Irwin</span>
                 <span className="text-xs text-muted-foreground leading-tight">IBPA</span>

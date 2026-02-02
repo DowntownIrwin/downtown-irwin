@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Mail } from "lucide-react";
 import { SEO } from "@/components/SEO";
-import ibpaLogo from "@assets/IBPA_Logo_v3.png_1770041663294.avif";
+import ibpaLogo from "@assets/IBPA_Logo_v3_1770042401362.png";
 
 export default function About() {
   return (
