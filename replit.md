@@ -70,18 +70,37 @@ shared/
 
 ### Accessing the Admin
 Navigate to `/admin` to access the content management system. Non-technical editors can:
-- Add/edit/delete events
+- Add/edit/delete events with scheduling options
 - Update page content (home, about, vendors, contact)
 - Manage sponsor tiers and pricing
 - Create photo galleries with links
 - Update site settings
+- Create and schedule announcements
+
+### Enhanced Editor Experience
+- **Grouped Fields**: Event editor organizes fields into collapsible cards (Basics, Content, Links, Scheduling, Options)
+- **Live Preview**: Toggle preview pane to see changes in real-time as you edit
+- **Auto-Generated Slugs**: URLs are automatically created from titles
+- **Scheduling System**: Set visibility windows and registration periods
 
 ### How It Works
 1. Editors log in via Netlify Identity
 2. Make changes in the visual editor
-3. Click "Publish" to save
-4. Changes are committed directly to GitHub
-5. GitHub Actions rebuilds and deploys the site automatically
+3. Use the preview pane to see changes before publishing
+4. Click "Publish" to save
+5. Changes are committed directly to GitHub
+6. GitHub Actions rebuilds and deploys the site automatically
+
+### Event Scheduling
+Events support automated visibility and registration status:
+- **Visible From/Until**: Control when an event appears on the site
+- **Registration Opens/Closes**: Automatically switch status between "Coming Soon" and "Open for Registration"
+- **Force Show Buttons**: Override to always show registration buttons regardless of status
+
+### Announcements
+- Create site-wide announcements with scheduling
+- Set publish date and expiration
+- Pin important announcements to appear first
 
 ## Content Structure
 
