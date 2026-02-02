@@ -137,23 +137,33 @@ SPONSORS_LOGO_JSON_URL = "https://jotform-sponsor-fetch.replit.app/api/sponsors.
 ```bash
 npm run dev    # Start development server on port 5000
 npm run build  # Build static site to dist/
+npm run check  # TypeScript type checking
 ```
 
-## GitHub Pages Deployment
+## Publishing (Wix-like)
 
-1. Build the static site:
-   ```bash
-   npm run build
-   ```
+Content updates via Google Sheets do NOT require redeploying. Code changes require publishing:
 
-2. Copy index.html to 404.html for client-side routing:
-   ```bash
-   cp dist/index.html dist/404.html
-   ```
+### Publish Command
+```bash
+bash scripts/publish.sh
+```
 
-3. Deploy the `dist/` folder to GitHub Pages
+This runs type check, builds, commits, and pushes to GitHub. GitHub Actions then deploys to Pages automatically.
 
-4. If using a custom domain, add a CNAME file to `dist/`
+### Manual Publish
+```bash
+npm run build
+cp dist/index.html dist/404.html
+git add -A && git commit -m "Publish site" && git push origin main
+```
+
+### One-Time Setup
+1. Connect Replit to GitHub via Git pane or GIT_URL secret
+2. Verify remote: `git remote -v`
+3. Enable GitHub Pages (Settings → Pages → Source: GitHub Actions)
+
+Live site: https://downtownirwin.github.io/downtown-irwin/
 
 ## Key Features
 

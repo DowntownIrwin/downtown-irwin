@@ -1,147 +1,180 @@
 # Downtown Irwin / IBPA Website
 
-A responsive community website for Downtown Irwin and the Irwin Business & Professional Association (IBPA), featuring events, the Irwin Car Cruise, vendor information, and sponsor opportunities.
+A production-ready community website for Downtown Irwin and the Irwin Business & Professional Association (IBPA). Built with React + Vite for static deployment to GitHub Pages with CMS-driven content from Google Sheets.
 
-## Features
+## Live Site
 
-- **Home Page**: Hero section, announcements, featured events, and CTAs
-- **About**: IBPA mission, history, and membership info
-- **Events**: Event cards sourced from API (ready for Google Sheets integration)
-- **Calendar**: EventsCalendar.co embed placeholder
-- **Vendors**: Vendor signup information and external form link
-- **Sponsors**: Four sponsorship tiers with benefits and Square payment links
-- **Car Cruise**: Dedicated page for the annual Irwin Car Cruise with sponsors section
-- **Contact**: Contact form with validation
-- **Admin**: Password-protected admin panel for managing announcements and featured events
+**https://downtownirwin.github.io/downtown-irwin/**
 
-## Tech Stack
-
-- **Frontend**: React + Vite + TypeScript
-- **Styling**: Tailwind CSS + shadcn/ui components
-- **Routing**: Wouter
-- **State**: TanStack Query
-- **Backend**: Express.js (for development)
-
-## Development
+## Quick Start
 
 ```bash
-# Install dependencies
 npm install
-
-# Run development server
 npm run dev
 ```
 
 The app runs on `http://localhost:5000`
 
-## Configuration
+---
 
-### Environment Variables
+## Publishing (Wix-like)
 
-- `ADMIN_PASSCODE`: Password for admin access (default: "irwin2026")
+This site uses a **Wix-like publishing model**: 
 
-### External URLs (update in `shared/types.ts`)
+- **Content updates** (events, sponsors, site config) are managed via Google Sheets and do NOT require redeploying
+- **Code updates** (design changes, new features) require publishing to GitHub
 
-- `vendorSignupForm`: Google Form URL for vendor applications
-- `eventsGoogleSheetJson`: Google Sheets JSON endpoint for events
-- `eventsCalendarEmbed`: EventsCalendar.co embed code/ID
-- `sponsorSquare*`: Square payment links for each sponsor tier
+### How It Works
 
-## Deployment to GitHub Pages
+1. **Content is CMS-driven**: All events, sponsor tiers, and site configuration come from a Google Apps Script JSON endpoint. Update your Google Sheet and the site updates automatically (with 10-minute cache).
 
-For static deployment (GitHub Pages, Netlify, etc.), you'll need to build the frontend only:
+2. **Code deploys via GitHub Actions**: When you push to the `main` branch, GitHub Actions automatically builds and deploys to GitHub Pages.
 
-### Option 1: Simple Static Build
+### Publishing Code Changes
 
+#### Option 1: Use the Publish Script
 ```bash
-# Build the frontend
-cd client
-npm run build
-
-# The built files will be in client/dist
+bash scripts/publish.sh
 ```
 
-### Option 2: GitHub Pages Deployment
+This script will:
+- Run TypeScript checks
+- Build the static site
+- Create 404.html for client-side routing
+- Commit and push to GitHub
+- GitHub Actions then deploys automatically
 
-1. **Update `vite.config.ts`** (if using a subdirectory):
-   ```ts
-   export default defineConfig({
-     base: '/your-repo-name/', // Add this for GitHub Pages subdirectory
-     // ... rest of config
-   })
+#### Option 2: Manual Publish
+```bash
+# 1. Build the site
+npm run build
+
+# 2. Create 404.html for SPA routing
+cp dist/index.html dist/404.html
+
+# 3. Commit and push
+git add -A
+git commit -m "Publish site - $(date)"
+git push origin main
+```
+
+### One-Time Setup
+
+#### 1. Connect Replit to GitHub
+
+In Replit, authenticate with GitHub to push code:
+
+**Option A: Using Git Pane (Recommended)**
+1. Open the Git pane in Replit (click the branch icon in the sidebar)
+2. Click "Connect to GitHub" and authorize Replit
+3. Your pushes will now work automatically
+
+**Option B: Using Personal Access Token**
+1. Create a GitHub Personal Access Token at https://github.com/settings/tokens
+   - Select scopes: `repo` (full control of private repositories)
+2. In Replit Secrets, add a secret named `GIT_URL` with value:
    ```
-
-2. **Create GitHub Actions workflow** (`.github/workflows/deploy.yml`):
-   ```yaml
-   name: Deploy to GitHub Pages
-   
-   on:
-     push:
-       branches: [main]
-   
-   jobs:
-     build-and-deploy:
-       runs-on: ubuntu-latest
-       steps:
-         - uses: actions/checkout@v3
-         
-         - name: Setup Node
-           uses: actions/setup-node@v3
-           with:
-             node-version: '20'
-             
-         - name: Install dependencies
-           run: npm ci
-           
-         - name: Build
-           run: cd client && npm run build
-           
-         - name: Deploy to GitHub Pages
-           uses: peaceiris/actions-gh-pages@v3
-           with:
-             github_token: ${{ secrets.GITHUB_TOKEN }}
-             publish_dir: ./client/dist
+   https://YOUR_USERNAME:YOUR_TOKEN@github.com/downtownirwin/downtown-irwin.git
    ```
+3. The publish script will use this automatically
 
-3. **Enable GitHub Pages** in your repository settings (Settings > Pages > Source: gh-pages branch)
+#### 2. Verify Remote Origin
+```bash
+# Check current remote
+git remote -v
 
-### Static Export Notes
+# If not set, add it:
+git remote add origin https://github.com/downtownirwin/downtown-irwin.git
+```
 
-For a fully static export:
-- The current setup uses an Express backend for API routes
-- For GitHub Pages (static-only), you'll need to:
-  1. Host the JSON data files externally (Google Sheets API, GitHub Gist, etc.)
-  2. Replace API calls with direct JSON file fetches
-  3. Use a serverless function provider (Vercel, Netlify Functions) for the contact form
+#### 3. Enable GitHub Pages
+1. Go to your GitHub repo → Settings → Pages
+2. Under "Build and deployment", select:
+   - Source: **GitHub Actions**
+3. The workflow at `.github/workflows/static.yml` handles the rest
 
-## Future Integrations
+### After Publishing
 
-### Google Sheets Integration for Events
-1. Create a Google Sheet with columns: `title`, `date`, `time`, `location`, `description`, `imageUrl`, `featured`
-2. Publish the sheet: File → Share → Publish to web → Select CSV format
-3. Get the JSON endpoint: `https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/gviz/tq?tqx=out:json`
-4. Update `EXTERNAL_URLS.eventsGoogleSheetJson` in `shared/types.ts` with your URL
-5. Set `USE_GOOGLE_SHEETS = true` in `client/src/pages/Events.tsx`
+Once you push to `main`, GitHub Actions will:
+1. Install dependencies
+2. Build the site (`npm run build`)
+3. Create 404.html for client-side routing
+4. Deploy the `dist/` folder to GitHub Pages
 
-**Note:** Google Sheets CORS may require a proxy for production. Consider using a serverless function or a CORS proxy service.
+Your site will be live at: **https://downtownirwin.github.io/downtown-irwin/**
 
-### EventsCalendar.co
-- Replace the calendar placeholder with your EventsCalendar.co embed code
-- Update `EXTERNAL_URLS.eventsCalendarEmbed` with your calendar ID
+---
 
-### Square Payments
-- Update sponsor tier URLs with your Square payment links
-- Links should point to your Square checkout pages
+## Pages
 
-## Admin Panel
+| Path | Description |
+|------|-------------|
+| `/` | Home - Hero, signature events, upcoming events, CTAs |
+| `/events` | Events index - Cards grouped by status (Open/Upcoming/Closed) |
+| `/events/:slug` | Event detail - Individual event with action buttons |
+| `/calendar` | Calendar - EventsCalendar.co embed from CMS |
+| `/vendors` | Vendors - Per-event vendor signup links |
+| `/sponsors` | Sponsors - Tier cards + sponsor logos section |
+| `/car-cruise` | Car Cruise hub page |
+| `/street-market` | Street Market hub page |
+| `/night-market` | Night Market hub page |
+| `/contact` | Contact form |
 
-Access the admin panel at `/admin` with the configured passcode.
+## CMS Configuration
 
-Features:
-- Manage homepage announcements (add/edit/delete, toggle visibility)
-- Manage featured events (add/edit/delete)
+### Setting Up the CMS Endpoint
 
-**Note**: Data is persisted to `data/admin-data.json`. For production, integrate with Google Sheets API for external storage and easier updates.
+1. Open `client/src/config.ts`
+2. Replace `<APPS_SCRIPT_WEB_APP_URL>` with your Google Apps Script Web App URL
+3. Optionally update `SPONSORS_LOGO_JSON_URL` if you have a different sponsors endpoint
+
+### CMS Routes
+
+Your Google Apps Script should respond to these routes:
+- `?route=site` - Site configuration (name, tagline, contact info, calendar embed)
+- `?route=events` - Events list with status, vendor/sponsor URLs
+- `?route=sponsorTiers` - Sponsorship tiers with benefits and Square URLs
+
+### Data Caching
+
+All CMS responses are cached in localStorage for 10 minutes. This ensures:
+- Fast page loads for returning visitors
+- Reduced API calls to your Google Apps Script
+- Graceful fallbacks if the CMS is temporarily unavailable
+
+## Project Structure
+
+```
+client/
+  src/
+    config.ts              # CMS endpoints configuration
+    hooks/useCMS.ts        # React Query hooks for CMS data
+    lib/cms.ts             # CMS fetching with localStorage cache
+    components/Layout.tsx  # Header, Footer, Navigation
+    pages/                 # All page components
+
+scripts/
+  publish.sh               # Publish script for deploying to GitHub
+
+.github/workflows/
+  static.yml               # GitHub Actions workflow for Pages deployment
+```
+
+## Tech Stack
+
+- **Frontend**: React 18, TypeScript, Vite
+- **Styling**: Tailwind CSS, shadcn/ui components
+- **Routing**: Wouter (client-side)
+- **Data Fetching**: TanStack Query with localStorage caching
+- **Deployment**: GitHub Pages via GitHub Actions
+
+## Development
+
+```bash
+npm run dev      # Start development server on port 5000
+npm run build    # Build static site to dist/
+npm run check    # Run TypeScript type checking
+```
 
 ## License
 
