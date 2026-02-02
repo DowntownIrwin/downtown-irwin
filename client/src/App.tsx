@@ -14,6 +14,7 @@ import CarCruise from "@/pages/CarCruise";
 import StreetMarket from "@/pages/StreetMarket";
 import NightMarket from "@/pages/NightMarket";
 import Contact from "@/pages/Contact";
+import About from "@/pages/About";
 import NotFound from "@/pages/not-found";
 
 function AppRouter() {
@@ -21,6 +22,7 @@ function AppRouter() {
     <Layout>
       <Switch>
         <Route path="/" component={Home} />
+        <Route path="/about" component={About} />
         <Route path="/events" component={Events} />
         <Route path="/events/:slug" component={EventDetail} />
         <Route path="/calendar" component={Calendar} />

@@ -3,25 +3,30 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Users, Car, MapPin, ArrowRight, ShoppingBag, Moon, Mail } from "lucide-react";
-import { useEvents, useSiteConfig } from "@/hooks/useCMS";
+import { useEvents } from "@/hooks/useCMS";
 import { groupEventsByStatus } from "@/lib/cms";
 import { SEO } from "@/components/SEO";
 import ibpaLogo from "@assets/IBPA_Logo_v3.png_1770041663294.avif";
+import heroBackground from "@assets/72dpi_Photo_Oct_19_2024,_5_56_10_AM_Downsized_edited_1770042251001.jpg";
 
 function HeroSection() {
-  const { data: siteConfig } = useSiteConfig();
-
   return (
-    <section className="relative bg-primary text-primary-foreground overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-primary/80" />
-      <div className="relative container mx-auto px-4 py-20 md:py-28">
+    <section className="relative text-white overflow-hidden">
+      <div 
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: `url(${heroBackground})` }}
+      />
+      <div className="absolute inset-0 bg-black/60" />
+      <div className="relative container mx-auto px-4 py-24 md:py-32">
         <div className="max-w-3xl">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-            {siteConfig?.hero_title || "Welcome to Downtown Irwin"}
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
+            Welcome to Downtown Irwin
           </h1>
-          <p className="text-lg md:text-xl opacity-90 mb-8 max-w-2xl">
-            {siteConfig?.hero_subtitle || 
-              "The Irwin Business & Professional Association brings our community together through vibrant events, local businesses, and the famous Irwin Car Cruise."}
+          <p className="text-xl md:text-2xl font-medium mb-6 text-white/90">
+            The biggest little town in Pennsylvania
+          </p>
+          <p className="text-lg md:text-xl opacity-80 mb-8 max-w-2xl">
+            The Irwin Business & Professional Association brings our community together through vibrant events, local businesses, and community spirit.
           </p>
           <div className="flex flex-wrap gap-4">
             <Link href="/events">
@@ -30,9 +35,9 @@ function HeroSection() {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
-            <Link href="/car-cruise">
-              <Button size="lg" variant="outline" className="bg-transparent border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10" data-testid="button-car-cruise">
-                Irwin Car Cruise
+            <Link href="/about">
+              <Button size="lg" variant="outline" className="bg-transparent border-white/30 text-white hover:bg-white/10" data-testid="button-about">
+                Learn About IBPA
               </Button>
             </Link>
           </div>

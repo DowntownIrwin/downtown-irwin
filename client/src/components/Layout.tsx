@@ -1,28 +1,33 @@
 import { Link, useLocation } from "wouter";
-import { Menu, MapPin, Mail, Phone, Facebook, Instagram } from "lucide-react";
+import { Menu, MapPin, Mail, Phone, Facebook, Instagram, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 
-const mainNavLinks = [
-  { href: "/", label: "Home" },
-  { href: "/events", label: "Events" },
-  { href: "/calendar", label: "Calendar" },
-  { href: "/vendors", label: "Vendors" },
-  { href: "/sponsors", label: "Sponsors" },
-  { href: "/contact", label: "Contact" },
-];
-
-const hubLinks = [
+const eventSubLinks = [
+  { href: "/events", label: "All Events" },
   { href: "/car-cruise", label: "Car Cruise" },
   { href: "/street-market", label: "Street Market" },
   { href: "/night-market", label: "Night Market" },
 ];
 
-const allNavLinks = [
-  ...mainNavLinks.slice(0, 2),
-  ...hubLinks,
-  ...mainNavLinks.slice(2),
+const mobileNavLinks = [
+  { href: "/", label: "Home" },
+  { href: "/about", label: "About" },
+  { href: "/events", label: "Events" },
+  { href: "/car-cruise", label: "Car Cruise" },
+  { href: "/street-market", label: "Street Market" },
+  { href: "/night-market", label: "Night Market" },
+  { href: "/calendar", label: "Calendar" },
+  { href: "/vendors", label: "Vendors" },
+  { href: "/sponsors", label: "Sponsors" },
+  { href: "/contact", label: "Contact" },
 ];
 
 function NavLink({ href, label, onClick }: { href: string; label: string; onClick?: () => void }) {
@@ -65,10 +70,24 @@ export function Header() {
 
           <nav className="hidden lg:flex items-center gap-6">
             <NavLink href="/" label="Home" />
-            <NavLink href="/events" label="Events" />
-            <NavLink href="/car-cruise" label="Car Cruise" />
-            <NavLink href="/street-market" label="Street Market" />
-            <NavLink href="/night-market" label="Night Market" />
+            <NavLink href="/about" label="About" />
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors" data-testid="nav-events-dropdown">
+                Events
+                <ChevronDown className="h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {eventSubLinks.map((link) => (
+                  <DropdownMenuItem key={link.href} asChild>
+                    <Link href={link.href}>
+                      <span className="cursor-pointer w-full" data-testid={`nav-link-${link.label.toLowerCase().replace(/\s+/g, '-')}`}>
+                        {link.label}
+                      </span>
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <NavLink href="/calendar" label="Calendar" />
             <NavLink href="/vendors" label="Vendors" />
             <NavLink href="/sponsors" label="Sponsors" />
@@ -84,7 +103,7 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side="right" className="w-[280px] sm:w-[350px]">
               <div className="flex flex-col gap-4 mt-8">
-                {allNavLinks.map((link) => (
+                {mobileNavLinks.map((link) => (
                   <SheetClose key={link.href} asChild>
                     <div>
                       <NavLink
