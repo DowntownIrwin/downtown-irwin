@@ -1,0 +1,134 @@
+Upgrade the Decap CMS admin UX and add scheduling + previews.
+
+NON-NEGOTIABLE WORKFLOW:
+- Editors ONLY use /admin.
+- Clicking Publish in /admin MUST create a GitHub commit via Netlify Git Gateway.
+- Netlify rebuilds automatically.
+- No shell commands, no git push for content edits.
+
+PART 1 — Make /admin UX-friendly (keep same functionality)
+A) Remove tech/jargon from editors
+- Hide slug completely (do not show a slug field anywhere).
+- Auto-generate the filename/slug from Title.
+- In Decap config:
+  - collection slug should be based on title (slug: "{{title}}") and let Decap slugify.
+  - identifier_field should be "title" for lists.
+
+B) Make forms less text-heavy
+- Re-label and re-order fields so editors see the important stuff first.
+- Use grouped sections (object widgets) so it feels like “cards”:
+  1) Basics: Title, Date(s), Hours, Location, Category, Status
+  2) Content: Description, Hero Image
+  3) Buttons & Links: Vendor/Sponsor/Attend buttons
+  4) Optional: Gallery, Featured toggle
+
+C) Add friendly labels + hints + defaults everywhere
+- Status options shown as:
+  - Open (registration live)
+  - Upcoming (not open yet)
+  - Closed (registration closed)
+- Defaults:
+  - status default: Upcoming
+  - category default: Other
+- Add short hints on every field (what it affects on the site).
+
+PART 2 — Preview while editing (Wix-like)
+Goal: editors can preview what they are editing without guessing.
+
+Implement BOTH of these:
+
+A) “Preview” button/links inside the CMS editor
+- On Events edit screen, show a read-only field with:
+  Preview URL: /events/<auto-slug>
+- On Pages edit screen:
+  Preview URL: /<page-slug>
+- On Galleries edit screen:
+  Preview URL: /galleries/<auto-slug>
+These should be clickable links.
+
+B) Live preview panel (best effort, same session)
+- Add a “Preview” pane in the admin UI that updates while typing:
+  - simplest acceptable: an iframe that loads the site preview route and refreshes on Save Draft
+  - preferred: update live via postMessage from CMS to the preview iframe
+- Create site routes for preview mode:
+  - /preview/event
+  - /preview/page
+  - /preview/gallery
+The preview route should accept JSON via postMessage and render using the same React components used on the live pages.
+
+Acceptance criteria:
+- While editing an event, editor can click Preview and see the event card + detail page layout with their content.
+- No need to Publish just to see what it will look like.
+
+PART 3 — Scheduling: future posts + automatic open/close registration
+We need “publish at a future date” behavior AND “open/close registration automatically”.
+
+IMPORTANT: This is a static site, so do NOT rely on background jobs or scheduled commits.
+Instead, implement time-based display logic in the site runtime (so it works immediately without redeploy once published).
+
+Add these fields:
+
+A) Events scheduling + registration automation
+- Add fields to each Event:
+  - visibleFrom (datetime, optional)  // event appears on site after this time
+  - visibleUntil (datetime, optional) // event hidden after this time
+  - registrationOpensAt (datetime, optional)
+  - registrationClosesAt (datetime, optional)
+
+Site behavior:
+- Event visibility:
+  - if visibleFrom is set and now < visibleFrom => hide from events list/calendar
+  - if visibleUntil is set and now > visibleUntil => hide
+- Registration status:
+  - if registrationOpensAt exists and now < registrationOpensAt => show status “Upcoming” and disable registration buttons (or label “Opens on …”)
+  - if registrationClosesAt exists and now > registrationClosesAt => show status “Closed” and disable registration buttons (or label “Closed”)
+  - otherwise if editor set status=Open => show active buttons
+
+Buttons:
+- For vendor/sponsor/attend buttons, render only if URL exists AND registration is currently open (unless editor overrides with a “Force show buttons” boolean).
+
+B) Scheduled posts / announcements
+Add a CMS collection “Announcements” (or “Updates”) with:
+- title
+- body
+- image (optional)
+- link (optional)
+- publishAt (datetime optional)
+- expireAt (datetime optional)
+- pinned (boolean)
+Site behavior:
+- Home page shows announcements where:
+  - now >= publishAt (or no publishAt)
+  - now <= expireAt (or no expireAt)
+- Sort pinned first, then newest.
+
+Admin UX:
+- Make scheduling fields optional and clearly labeled:
+  - “Show starting (optional)”
+  - “Hide after (optional)”
+  - “Registration opens (optional)”
+  - “Registration closes (optional)”
+- Add hints that explain: “Set this if you want it to flip automatically.”
+
+PART 4 — Submenu support (requested)
+In Pages CMS:
+- showInMenu (bool)
+- menuLabel (string)
+- parentMenu (select/relation) to choose a parent menu item
+- menuOrder (number)
+
+Nav rendering:
+- Top-level = showInMenu true and parentMenu empty
+- Sub-menu = showInMenu true and parentMenu set
+- Desktop dropdown + mobile accordion.
+
+DELIVERABLES:
+- Updated client/public/admin/config.yml with the improved UX, no slug field, grouped widgets, hints, defaults.
+- New content types for announcements + scheduling fields.
+- Updated React site logic for time-based visibility and registration open/close.
+- Preview routes + preview pane implementation (at least clickable preview links; preferred iframe preview with postMessage).
+- README updates for editors explaining:
+  - how to create events
+  - how to schedule visibility
+  - how registration open/close works
+  - how preview works

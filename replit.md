@@ -40,7 +40,7 @@ client/
       Home.tsx             # Homepage with hero, events, CTAs
       Events.tsx           # Events index with search
       EventDetail.tsx      # Event detail page (/events/:slug)
-      Calendar.tsx         # EventsCalendar.co embed
+      Calendar.tsx         # Native calendar with month grid and list views
       Vendors.tsx          # Per-event vendor signup links
       Sponsors.tsx         # Tiers + sponsor logos
       CarCruise.tsx        # Car Cruise hub page
@@ -57,7 +57,7 @@ shared/
 - **Home** (`/`) - Hero, signature events, upcoming events, CTAs
 - **Events** (`/events`) - Event cards with search, grouped by status
 - **Event Detail** (`/events/:slug`) - Individual event details
-- **Calendar** (`/calendar`) - EventsCalendar.co embed
+- **Calendar** (`/calendar`) - Native calendar with month grid and list views, filtering by status/category
 - **Vendors** (`/vendors`) - Per-event vendor signup links
 - **Sponsors** (`/sponsors`) - Tier cards + sponsor logos
 - **Car Cruise** (`/car-cruise`) - Hub page for car cruise event
@@ -208,6 +208,8 @@ bash scripts/publish.sh
 - **Per-Event Actions**: Vendor signup, sponsor, and register buttons
 - **Hub Pages**: Dedicated pages for Car Cruise, Street Market, Night Market
 - **Responsive Design**: Mobile-first with hamburger menu
+- **Native Calendar**: Interactive month grid with event pills, list view, and status/category filtering
+- **Submenu Navigation**: CMS-driven dropdown menus (desktop) and accordion menus (mobile) via parentMenu field
 - **SEO**: Per-page title, description, and Open Graph tags
 
 ## Styling
