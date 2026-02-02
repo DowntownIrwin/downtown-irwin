@@ -1,13 +1,22 @@
+import { useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar as CalendarIcon, ExternalLink, Loader2 } from "lucide-react";
-import { useSiteConfig } from "@/hooks/useCMS";
+import { ExternalLink } from "lucide-react";
 import { SEO } from "@/components/SEO";
 
-export default function Calendar() {
-  const { data: siteConfig, isLoading } = useSiteConfig();
+const CALENDAR_APP_ID = "proj_dJGH0ihOCO4zdcz1EA5VE";
 
-  const hasEmbed = siteConfig?.events_calendar_embed && 
-    siteConfig.events_calendar_embed.trim() !== "";
+export default function Calendar() {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const existingScript = document.querySelector('script[src="https://dist.eventscalendar.co/embed.js"]');
+    if (!existingScript) {
+      const script = document.createElement("script");
+      script.src = "https://dist.eventscalendar.co/embed.js";
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }, []);
 
   return (
     <div className="py-12 md:py-16">
@@ -25,32 +34,16 @@ export default function Calendar() {
           </p>
         </div>
 
-        {isLoading ? (
-          <div className="flex justify-center items-center py-16">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : hasEmbed ? (
-          <Card className="mb-8">
-            <CardContent className="p-6">
-              <div 
-                className="w-full min-h-[600px]"
-                dangerouslySetInnerHTML={{ __html: siteConfig.events_calendar_embed }}
-              />
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="mb-8">
-            <CardContent className="p-6">
-              <div className="aspect-video bg-muted rounded-lg flex flex-col items-center justify-center text-center p-8">
-                <CalendarIcon className="h-16 w-16 text-muted-foreground/50 mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Calendar Coming Soon</h3>
-                <p className="text-muted-foreground mb-4 max-w-md">
-                  Our event calendar is being set up. Check back soon or visit our Events page for upcoming activities.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <Card className="mb-8">
+          <CardContent className="p-6">
+            <div 
+              ref={containerRef}
+              className="w-full min-h-[600px]"
+              data-events-calendar-app={CALENDAR_APP_ID}
+              data-testid="calendar-embed"
+            />
+          </CardContent>
+        </Card>
 
         <div className="bg-accent rounded-lg p-6 text-center">
           <h3 className="font-semibold mb-2">Subscribe to Our Calendar</h3>

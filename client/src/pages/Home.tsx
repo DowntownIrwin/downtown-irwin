@@ -2,10 +2,11 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, Car, MapPin, ArrowRight, ShoppingBag, Moon } from "lucide-react";
+import { Calendar, Users, Car, MapPin, ArrowRight, ShoppingBag, Moon, Mail } from "lucide-react";
 import { useEvents, useSiteConfig } from "@/hooks/useCMS";
 import { groupEventsByStatus } from "@/lib/cms";
 import { SEO } from "@/components/SEO";
+import ibpaLogo from "@assets/IBPA_Logo_v3.png_1770041663294.avif";
 
 function HeroSection() {
   const { data: siteConfig } = useSiteConfig();
@@ -102,6 +103,57 @@ function FeaturesSection() {
               </CardContent>
             </Card>
           ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function AboutSection() {
+  return (
+    <section className="py-16 md:py-24 bg-card">
+      <div className="container mx-auto px-4">
+        <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="flex justify-center">
+            <img 
+              src={ibpaLogo} 
+              alt="IBPA Logo" 
+              className="max-w-xs md:max-w-sm w-full h-auto"
+              data-testid="img-ibpa-logo"
+            />
+          </div>
+          <div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">
+              The Irwin Business & Professional Association (IBPA)
+            </h2>
+            <div className="space-y-4 text-muted-foreground">
+              <p>
+                The IBPA is an all-volunteer group that promotes the health & vitality of Irwin for the benefit of the surrounding communities.
+              </p>
+              <p>
+                Annually, the IBPA organizes 15+ free community events. These events are open to everyone, not just Irwin residents. The IBPA receives no government funding. All of the events are paid for by sponsorships, business participation fees, and vendor fees. The volunteers are very appreciative of the support they receive from the local businesses and community members.
+              </p>
+              <p>
+                Are you interested in what the IBPA is doing? Do you want to get more involved in the community? If so, then join us at a meeting; all are welcome! Meetings are held every Thursday from 8:00 - 9:00 a.m. in downtown Irwin.
+              </p>
+              <div className="bg-accent p-4 rounded-lg mt-6">
+                <p className="text-sm flex items-start gap-2">
+                  <Mail className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
+                  <span>
+                    If you are new to our group and plan on attending a meeting, please reach out to{" "}
+                    <a 
+                      href="mailto:jmsmaligo@gmail.com" 
+                      className="text-primary hover:underline font-medium"
+                      data-testid="link-ibpa-email"
+                    >
+                      jmsmaligo@gmail.com
+                    </a>{" "}
+                    for more information.
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -233,6 +285,7 @@ export default function Home() {
         path="/"
       />
       <HeroSection />
+      <AboutSection />
       <FeaturesSection />
       <UpcomingEventsSection />
       <GetInvolvedSection />
