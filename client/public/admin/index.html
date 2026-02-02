@@ -5,9 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex" />
     <title>Downtown Irwin Admin</title>
+    <script src="https://unpkg.com/gotrue-js@0.9.29/dist/gotrue.umd.js"></script>
     <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   </head>
   <body>
     <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+    <script>
+      (function() {
+        // Initialize GoTrue with the Netlify Identity endpoint
+        const auth = new GoTrue({
+          APIUrl: window.location.origin + '/.netlify/identity',
+          setCookie: true
+        });
+
+        // Intercept clicks on the Google login button to force account picker
+        document.addEventListener('click', function(e) {
+          const target = e.target.closest('[data-provider="google"], button');
+          if (target && target.textContent && target.textContent.toLowerCase().includes('google')) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Use external login with prompt parameter for account selection
+            const provider = 'google';
+            const redirectTo = window.location.origin + '/admin/';
+            
+            // Build OAuth URL with prompt=select_account
+            const params = new URLSearchParams({
+              provider: provider,
+              redirect_uri: redirectTo,
+              prompt: 'select_account'
+            });
+            
+            window.location.href = window.location.origin + '/.netlify/identity/authorize?' + params.toString();
+          }
+        }, true);
+      })();
+    </script>
   </body>
 </html>
