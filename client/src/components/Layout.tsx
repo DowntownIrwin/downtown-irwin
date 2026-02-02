@@ -67,6 +67,8 @@ export function Header() {
             <NavLink href="/" label="Home" />
             <NavLink href="/events" label="Events" />
             <NavLink href="/car-cruise" label="Car Cruise" />
+            <NavLink href="/street-market" label="Street Market" />
+            <NavLink href="/night-market" label="Night Market" />
             <NavLink href="/calendar" label="Calendar" />
             <NavLink href="/vendors" label="Vendors" />
             <NavLink href="/sponsors" label="Sponsors" />

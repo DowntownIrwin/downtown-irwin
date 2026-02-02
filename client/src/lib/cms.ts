@@ -101,11 +101,48 @@ export async function fetchSponsorLogos(): Promise<SponsorLogosData> {
     supporting: [],
   };
   
-  return fetchWithCache<SponsorLogosData>(
-    SPONSORS_LOGO_JSON_URL,
-    CACHE_KEYS.sponsorLogos,
-    fallback
-  );
+  // Check cache first
+  const cached = getFromCache<SponsorLogosData>(CACHE_KEYS.sponsorLogos);
+  if (cached) return cached;
+  
+  try {
+    const response = await fetch(SPONSORS_LOGO_JSON_URL);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    
+    // Normalize data to ensure consistent SponsorLogo objects
+    const normalizeSponsorArray = (arr: any[]): { name: string; logo_url?: string; website?: string }[] => {
+      if (!Array.isArray(arr)) return [];
+      return arr
+        .filter(item => item != null)
+        .map(item => {
+          if (typeof item === 'string') {
+            return { name: item, logo_url: '', website: '' };
+          }
+          return {
+            name: item.name || '',
+            logo_url: item.logo_url || '',
+            website: item.website || ''
+          };
+        })
+        .filter(item => item.name);
+    };
+
+    const normalizedData: SponsorLogosData = {
+      presenting: normalizeSponsorArray(data.presenting),
+      gold: normalizeSponsorArray(data.gold),
+      silver: normalizeSponsorArray(data.silver),
+      supporting: Array.isArray(data.supporting) 
+        ? data.supporting.filter((s: any) => typeof s === 'string' && s.trim())
+        : [],
+    };
+    
+    setToCache(CACHE_KEYS.sponsorLogos, normalizedData);
+    return normalizedData;
+  } catch (error) {
+    console.error(`Failed to fetch sponsor logos:`, error);
+    return fallback;
+  }
 }
 
 // Helper to get event by slug

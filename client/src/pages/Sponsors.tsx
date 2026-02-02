@@ -56,12 +56,23 @@ function SponsorTierCard({ tier }: { tier: SponsorTier }) {
   );
 }
 
-function SponsorLogosSection({ logos }: { logos: SponsorLogosData }) {
+function SponsorLogosSection({ logos }: { logos: SponsorLogosData | undefined }) {
+  if (!logos) {
+    return (
+      <section className="py-12 bg-card rounded-lg">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-2xl font-bold mb-4">Our Sponsors</h2>
+          <p className="text-muted-foreground">Loading sponsors...</p>
+        </div>
+      </section>
+    );
+  }
+
   const allEmpty = 
-    logos.presenting.length === 0 && 
-    logos.gold.length === 0 && 
-    logos.silver.length === 0 && 
-    logos.supporting.length === 0;
+    (logos.presenting?.length || 0) === 0 && 
+    (logos.gold?.length || 0) === 0 && 
+    (logos.silver?.length || 0) === 0 && 
+    (logos.supporting?.length || 0) === 0;
 
   if (allEmpty) {
     return (
@@ -75,9 +86,9 @@ function SponsorLogosSection({ logos }: { logos: SponsorLogosData }) {
   }
 
   const tiers = [
-    { key: 'presenting' as const, label: 'Presenting Sponsors', icon: Crown, color: 'bg-amber-500', sponsors: logos.presenting },
-    { key: 'gold' as const, label: 'Gold Sponsors', icon: Award, color: 'bg-yellow-500', sponsors: logos.gold },
-    { key: 'silver' as const, label: 'Silver Sponsors', icon: Medal, color: 'bg-slate-400', sponsors: logos.silver },
+    { key: 'presenting' as const, label: 'Presenting Sponsors', icon: Crown, color: 'bg-amber-500', sponsors: logos.presenting || [] },
+    { key: 'gold' as const, label: 'Gold Sponsors', icon: Award, color: 'bg-yellow-500', sponsors: logos.gold || [] },
+    { key: 'silver' as const, label: 'Silver Sponsors', icon: Medal, color: 'bg-slate-400', sponsors: logos.silver || [] },
   ];
 
   return (
@@ -130,7 +141,7 @@ function SponsorLogosSection({ logos }: { logos: SponsorLogosData }) {
           );
         })}
 
-        {logos.supporting.length > 0 && (
+        {(logos.supporting?.length || 0) > 0 && (
           <div className="mt-12">
             <div className="flex items-center justify-center gap-3 mb-6">
               <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
@@ -139,9 +150,9 @@ function SponsorLogosSection({ logos }: { logos: SponsorLogosData }) {
               <h3 className="text-xl font-semibold">Supporting Sponsors</h3>
             </div>
             <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-muted-foreground">
-              {logos.supporting.map((name, index) => (
+              {(logos.supporting || []).map((name, index) => (
                 <span key={index} className="text-sm">
-                  {name}{index < logos.supporting.length - 1 ? " •" : ""}
+                  {name}{index < (logos.supporting?.length || 0) - 1 ? " •" : ""}
                 </span>
               ))}
             </div>
