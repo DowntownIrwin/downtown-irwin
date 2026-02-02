@@ -1,7 +1,9 @@
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, Clock, Loader2, Users, ExternalLink, Ticket } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Calendar, MapPin, Clock, Loader2, Users, ExternalLink, Ticket, Search } from "lucide-react";
 import { Link } from "wouter";
 import { useEvents } from "@/hooks/useCMS";
 import { groupEventsByStatus } from "@/lib/cms";
@@ -120,9 +122,24 @@ function EventSection({ title, events, emptyMessage }: {
 
 export default function Events() {
   const { data: events, isLoading, error } = useEvents();
+  const [searchQuery, setSearchQuery] = useState("");
   
-  const grouped = events ? groupEventsByStatus(events) : { open: [], upcoming: [], closed: [] };
+  const filteredEvents = useMemo(() => {
+    if (!events) return [];
+    if (!searchQuery.trim()) return events;
+    
+    const query = searchQuery.toLowerCase();
+    return events.filter(event => 
+      event.title.toLowerCase().includes(query) ||
+      event.description?.toLowerCase().includes(query) ||
+      event.location?.toLowerCase().includes(query) ||
+      event.date?.toLowerCase().includes(query)
+    );
+  }, [events, searchQuery]);
+  
+  const grouped = groupEventsByStatus(filteredEvents);
   const hasEvents = events && events.length > 0;
+  const hasResults = filteredEvents.length > 0;
 
   return (
     <div className="py-12 md:py-16">
@@ -140,6 +157,22 @@ export default function Events() {
           </p>
         </div>
 
+        {!isLoading && hasEvents && (
+          <div className="max-w-md mx-auto mb-8">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search events..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+                data-testid="input-search-events"
+              />
+            </div>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="flex justify-center items-center py-16">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -150,6 +183,14 @@ export default function Events() {
             <h3 className="text-xl font-semibold mb-2">No Events Found</h3>
             <p className="text-muted-foreground">
               Check back soon for upcoming community events!
+            </p>
+          </div>
+        ) : !hasResults ? (
+          <div className="text-center py-16">
+            <Search className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+            <h3 className="text-xl font-semibold mb-2">No Matching Events</h3>
+            <p className="text-muted-foreground">
+              No events match "{searchQuery}". Try a different search term.
             </p>
           </div>
         ) : (
