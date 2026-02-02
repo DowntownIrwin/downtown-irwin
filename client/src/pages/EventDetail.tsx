@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, Clock, Loader2, Users, ExternalLink, Ticket, ArrowLeft, Info } from "lucide-react";
 import { Link, useRoute } from "wouter";
 import { useEvent } from "@/hooks/useCMS";
-import { getEventUrls } from "@/lib/content";
+import { getEventUrls, getEffectiveStatus, shouldShowRegistrationButtons, getRegistrationMessage } from "@/lib/content";
 import { SEO } from "@/components/SEO";
 
 export default function EventDetail() {
@@ -85,12 +85,23 @@ export default function EventDetail() {
               </div>
             )}
 
-            <div className="flex items-center gap-3 mb-4">
-              <Badge className={statusColors[event.status]}>
-                {statusLabels[event.status]}
-              </Badge>
-              {event.featured && <Badge variant="outline">Featured</Badge>}
-            </div>
+            {(() => {
+              const effectiveStatus = getEffectiveStatus(event);
+              const registrationMsg = getRegistrationMessage(event);
+              return (
+                <>
+                  <div className="flex items-center gap-3 mb-4">
+                    <Badge className={statusColors[effectiveStatus]}>
+                      {statusLabels[effectiveStatus]}
+                    </Badge>
+                    {event.featured && <Badge variant="outline">Featured</Badge>}
+                  </div>
+                  {registrationMsg && (
+                    <p className="text-sm text-muted-foreground mb-4 italic">{registrationMsg}</p>
+                  )}
+                </>
+              );
+            })()}
 
             <h1 className="text-3xl md:text-4xl font-bold mb-4">{event.title}</h1>
             
@@ -153,9 +164,10 @@ export default function EventDetail() {
                 <div className="space-y-3 pt-4 border-t">
                   {(() => {
                     const urls = getEventUrls(event);
+                    const showButtons = shouldShowRegistrationButtons(event);
                     return (
                       <>
-                        {urls.vendorUrl && (
+                        {urls.vendorUrl && showButtons && (
                           <a href={urls.vendorUrl} target="_blank" rel="noopener noreferrer" className="block">
                             <Button className="w-full" variant="outline" data-testid="button-vendor-signup">
                               <Users className="h-4 w-4 mr-2" />
@@ -164,7 +176,7 @@ export default function EventDetail() {
                           </a>
                         )}
                         
-                        {urls.sponsorUrl && (
+                        {urls.sponsorUrl && showButtons && (
                           <a href={urls.sponsorUrl} target="_blank" rel="noopener noreferrer" className="block">
                             <Button className="w-full" variant="outline" data-testid="button-sponsor-event">
                               <ExternalLink className="h-4 w-4 mr-2" />
@@ -173,13 +185,19 @@ export default function EventDetail() {
                           </a>
                         )}
                         
-                        {urls.attendeeUrl && (
+                        {urls.attendeeUrl && showButtons && (
                           <a href={urls.attendeeUrl} target="_blank" rel="noopener noreferrer" className="block">
                             <Button className="w-full" data-testid="button-register-event">
                               <Ticket className="h-4 w-4 mr-2" />
                               Attend / Register
                             </Button>
                           </a>
+                        )}
+                        
+                        {!showButtons && (urls.vendorUrl || urls.sponsorUrl || urls.attendeeUrl) && (
+                          <p className="text-sm text-center text-muted-foreground">
+                            Registration is currently closed
+                          </p>
                         )}
                       </>
                     );

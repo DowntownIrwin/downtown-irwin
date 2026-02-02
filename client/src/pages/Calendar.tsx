@@ -28,7 +28,7 @@ import {
   Ticket
 } from "lucide-react";
 import { SEO } from "@/components/SEO";
-import { allEvents, getEventUrls, type CMSEvent } from "@/lib/content";
+import { getVisibleEvents, getEventUrls, getEffectiveStatus, shouldShowRegistrationButtons, type CMSEvent } from "@/lib/content";
 
 type ViewMode = "month" | "list";
 type StatusFilter = "all" | "open" | "upcoming" | "closed";
@@ -354,13 +354,16 @@ export default function Calendar() {
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [selectedEvent, setSelectedEvent] = useState<CMSEvent | null>(null);
   
+  const visibleEvents = useMemo(() => getVisibleEvents(), []);
+  
   const filteredEvents = useMemo(() => {
-    return allEvents.filter(event => {
-      if (statusFilter !== "all" && event.status !== statusFilter) return false;
+    return visibleEvents.filter(event => {
+      const effectiveStatus = getEffectiveStatus(event);
+      if (statusFilter !== "all" && effectiveStatus !== statusFilter) return false;
       if (categoryFilter !== "all" && event.eventType !== categoryFilter) return false;
       return true;
     });
-  }, [statusFilter, categoryFilter]);
+  }, [visibleEvents, statusFilter, categoryFilter]);
   
   const navigateMonth = (direction: number) => {
     setCurrentDate(prev => {

@@ -6,12 +6,100 @@
     <meta name="robots" content="noindex" />
     <title>Downtown Irwin Admin</title>
     <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    <style>
+      .preview-panel {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 50%;
+        height: 100vh;
+        background: #fff;
+        border-left: 2px solid #ddd;
+        z-index: 9999;
+        display: none;
+        flex-direction: column;
+      }
+      .preview-panel.open {
+        display: flex;
+      }
+      .preview-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background: #f5f5f5;
+        border-bottom: 1px solid #ddd;
+      }
+      .preview-header h3 {
+        margin: 0;
+        font-size: 14px;
+        color: #333;
+      }
+      .preview-close {
+        background: none;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 4px 12px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      .preview-close:hover {
+        background: #eee;
+      }
+      .preview-iframe {
+        flex: 1;
+        border: none;
+        width: 100%;
+      }
+      .preview-toggle {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #2b5a8a;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 20px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        z-index: 9998;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      }
+      .preview-toggle:hover {
+        background: #1e4a6f;
+      }
+      .preview-banner {
+        background: #fffbeb;
+        border-bottom: 1px solid #fde68a;
+        padding: 8px 16px;
+        font-size: 12px;
+        color: #92400e;
+      }
+      body.preview-open main {
+        width: 50% !important;
+      }
+    </style>
   </head>
   <body>
+    <div id="preview-panel" class="preview-panel">
+      <div class="preview-header">
+        <h3>Live Preview</h3>
+        <button class="preview-close" onclick="togglePreview()">Close Preview</button>
+      </div>
+      <div class="preview-banner">
+        This preview updates when you save a draft. Changes appear here before publishing.
+      </div>
+      <iframe id="preview-iframe" class="preview-iframe" src="/preview/event"></iframe>
+    </div>
+    <button id="preview-toggle" class="preview-toggle" onclick="togglePreview()" style="display: none;">
+      Preview
+    </button>
+
     <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
     <script>
       (function() {
-        var INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes in milliseconds
+        var INACTIVITY_TIMEOUT = 10 * 60 * 1000;
         var inactivityTimer;
 
         function performLogout() {
@@ -28,15 +116,80 @@
           inactivityTimer = setTimeout(performLogout, INACTIVITY_TIMEOUT);
         }
 
-        // Track user activity events
         var activityEvents = ['mousedown', 'mousemove', 'keydown', 'touchstart', 'scroll', 'click'];
         activityEvents.forEach(function(event) {
           document.addEventListener(event, resetInactivityTimer, { passive: true });
         });
-
-        // Start the timer when page loads
         resetInactivityTimer();
       })();
+
+      // Preview panel functionality
+      window.togglePreview = function() {
+        var panel = document.getElementById('preview-panel');
+        var isOpen = panel.classList.contains('open');
+        panel.classList.toggle('open');
+        document.body.classList.toggle('preview-open');
+      };
+
+      // Show preview button when editing
+      function updatePreviewButton() {
+        var btn = document.getElementById('preview-toggle');
+        var path = window.location.hash;
+        if (path.includes('/collections/events/') || 
+            path.includes('/collections/galleries/') || 
+            path.includes('/collections/pages/')) {
+          btn.style.display = 'block';
+          
+          // Update iframe source based on collection type
+          var iframe = document.getElementById('preview-iframe');
+          if (path.includes('/events/')) {
+            iframe.src = '/preview/event';
+          } else if (path.includes('/galleries/')) {
+            iframe.src = '/preview/gallery';
+          } else if (path.includes('/pages/')) {
+            iframe.src = '/preview/page';
+          }
+        } else {
+          btn.style.display = 'none';
+          document.getElementById('preview-panel').classList.remove('open');
+          document.body.classList.remove('preview-open');
+        }
+      }
+
+      // Watch for hash changes
+      window.addEventListener('hashchange', updatePreviewButton);
+      updatePreviewButton();
+
+      // Register preview template for Decap CMS
+      if (window.CMS) {
+        CMS.registerEventListener({
+          name: 'preSave',
+          handler: function(event) {
+            var data = event.data;
+            var collection = data.get('collection');
+            var entry = data.get('entry');
+            var entryData = entry.get('data').toJS();
+            
+            // Store preview data in sessionStorage
+            var previewType = 'event';
+            if (collection === 'galleries') previewType = 'gallery';
+            if (collection === 'pages') previewType = 'page';
+            
+            sessionStorage.setItem('preview-' + previewType, JSON.stringify(entryData));
+            
+            // Send to preview iframe via postMessage
+            var iframe = document.getElementById('preview-iframe');
+            if (iframe && iframe.contentWindow) {
+              iframe.contentWindow.postMessage({
+                type: 'preview',
+                payload: entryData
+              }, '*');
+            }
+            
+            return data;
+          }
+        });
+      }
     </script>
   </body>
 </html>

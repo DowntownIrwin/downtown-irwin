@@ -1,0 +1,12 @@
+{
+  "title": "Welcome to Downtown Irwin",
+  "body": "Stay tuned for announcements about upcoming events and community updates!",
+  "image": null,
+  "link": "/events",
+  "linkText": "View Events",
+  "scheduling": {
+    "publishAt": null,
+    "expireAt": null,
+    "pinned": false
+  }
+}

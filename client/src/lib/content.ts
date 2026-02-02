@@ -1,10 +1,45 @@
 // Content types for the CMS
+
+// Scheduling fields for time-based visibility
+export interface SchedulingFields {
+  visibleFrom?: string | null;
+  visibleUntil?: string | null;
+  registrationOpensAt?: string | null;
+  registrationClosesAt?: string | null;
+}
+
 export interface EventLinks {
   vendorUrl?: string | null;
   sponsorUrl?: string | null;
   attendeeUrl?: string | null;
+  forceShowButtons?: boolean;
 }
 
+// New nested CMS event structure
+export interface CMSEventNested {
+  basics?: {
+    title: string;
+    startDate: string;
+    endDate?: string | null;
+    timeText?: string;
+    location?: string;
+    eventType: "car-cruise" | "street-market" | "night-market" | "other";
+    status: "open" | "upcoming" | "closed";
+  };
+  content?: {
+    description: string;
+    heroImage?: string | null;
+  };
+  links?: EventLinks;
+  scheduling?: SchedulingFields;
+  options?: {
+    featured: boolean;
+    cap?: number | null;
+    gallerySlug?: string | null;
+  };
+}
+
+// Normalized event interface used throughout the app
 export interface CMSEvent {
   slug?: string;
   title: string;
@@ -18,11 +53,36 @@ export interface CMSEvent {
   vendorUrl?: string | null;
   sponsorUrl?: string | null;
   attendeeUrl?: string | null;
+  forceShowButtons?: boolean;
   links?: EventLinks;
   heroImage?: string | null;
   gallerySlug?: string | null;
   featured: boolean;
   eventType: "car-cruise" | "street-market" | "night-market" | "other";
+  // Scheduling fields
+  visibleFrom?: string | null;
+  visibleUntil?: string | null;
+  registrationOpensAt?: string | null;
+  registrationClosesAt?: string | null;
+}
+
+// Announcement type
+export interface CMSAnnouncement {
+  slug?: string;
+  title: string;
+  body: string;
+  image?: string | null;
+  link?: string | null;
+  linkText?: string;
+  scheduling?: {
+    publishAt?: string | null;
+    expireAt?: string | null;
+    pinned?: boolean;
+  };
+  // Flattened for convenience
+  publishAt?: string | null;
+  expireAt?: string | null;
+  pinned?: boolean;
 }
 
 // Helper to get URLs from event (supports both old flat and new nested structure)
@@ -31,7 +91,106 @@ export function getEventUrls(event: CMSEvent): EventLinks {
     vendorUrl: event.links?.vendorUrl || event.vendorUrl || null,
     sponsorUrl: event.links?.sponsorUrl || event.sponsorUrl || null,
     attendeeUrl: event.links?.attendeeUrl || event.attendeeUrl || null,
+    forceShowButtons: event.links?.forceShowButtons || event.forceShowButtons || false,
   };
+}
+
+// Time-based visibility helpers
+export function isEventVisible(event: CMSEvent): boolean {
+  const now = new Date();
+  
+  if (event.visibleFrom) {
+    const visibleFrom = new Date(event.visibleFrom);
+    if (now < visibleFrom) return false;
+  }
+  
+  if (event.visibleUntil) {
+    const visibleUntil = new Date(event.visibleUntil);
+    if (now > visibleUntil) return false;
+  }
+  
+  return true;
+}
+
+// Get the effective status based on scheduling
+export function getEffectiveStatus(event: CMSEvent): "open" | "upcoming" | "closed" {
+  const now = new Date();
+  
+  // Check registration opens
+  if (event.registrationOpensAt) {
+    const opensAt = new Date(event.registrationOpensAt);
+    if (now < opensAt) return "upcoming";
+  }
+  
+  // Check registration closes
+  if (event.registrationClosesAt) {
+    const closesAt = new Date(event.registrationClosesAt);
+    if (now > closesAt) return "closed";
+  }
+  
+  // If registrationOpensAt is set and we're past it, and no closesAt or we're before it
+  if (event.registrationOpensAt) {
+    const opensAt = new Date(event.registrationOpensAt);
+    if (now >= opensAt) {
+      if (!event.registrationClosesAt) return "open";
+      const closesAt = new Date(event.registrationClosesAt);
+      if (now <= closesAt) return "open";
+    }
+  }
+  
+  // Fall back to manual status
+  return event.status;
+}
+
+// Check if registration buttons should be shown
+export function shouldShowRegistrationButtons(event: CMSEvent): boolean {
+  const urls = getEventUrls(event);
+  
+  // Force show if editor set it
+  if (urls.forceShowButtons) return true;
+  
+  const effectiveStatus = getEffectiveStatus(event);
+  return effectiveStatus === "open";
+}
+
+// Get registration status message
+export function getRegistrationMessage(event: CMSEvent): string | null {
+  const now = new Date();
+  
+  if (event.registrationOpensAt) {
+    const opensAt = new Date(event.registrationOpensAt);
+    if (now < opensAt) {
+      return `Registration opens ${opensAt.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`;
+    }
+  }
+  
+  if (event.registrationClosesAt) {
+    const closesAt = new Date(event.registrationClosesAt);
+    if (now > closesAt) {
+      return "Registration closed";
+    }
+  }
+  
+  return null;
+}
+
+// Check if announcement is visible
+export function isAnnouncementVisible(announcement: CMSAnnouncement): boolean {
+  const now = new Date();
+  const publishAt = announcement.scheduling?.publishAt || announcement.publishAt;
+  const expireAt = announcement.scheduling?.expireAt || announcement.expireAt;
+  
+  if (publishAt) {
+    const publishDate = new Date(publishAt);
+    if (now < publishDate) return false;
+  }
+  
+  if (expireAt) {
+    const expireDate = new Date(expireAt);
+    if (now > expireDate) return false;
+  }
+  
+  return true;
 }
 
 // Generate slug from title if not present
@@ -42,8 +201,40 @@ function slugify(text: string): string {
     .replace(/(^-|-$)/g, '');
 }
 
-// Normalize event to ensure it has a slug
-function normalizeEvent(event: CMSEvent, filename: string): CMSEvent {
+// Normalize event from CMS format to flat format
+function normalizeEvent(rawEvent: any, filename: string): CMSEvent {
+  // Handle new nested structure
+  if (rawEvent.basics) {
+    const nested = rawEvent as CMSEventNested;
+    const slug = slugify(nested.basics?.title || '') || filename.replace('.json', '');
+    return {
+      slug,
+      title: nested.basics?.title || '',
+      startDate: nested.basics?.startDate || '',
+      endDate: nested.basics?.endDate,
+      timeText: nested.basics?.timeText,
+      location: nested.basics?.location,
+      eventType: nested.basics?.eventType || 'other',
+      status: nested.basics?.status || 'upcoming',
+      description: nested.content?.description || '',
+      heroImage: nested.content?.heroImage,
+      vendorUrl: nested.links?.vendorUrl,
+      sponsorUrl: nested.links?.sponsorUrl,
+      attendeeUrl: nested.links?.attendeeUrl,
+      forceShowButtons: nested.links?.forceShowButtons,
+      links: nested.links,
+      visibleFrom: nested.scheduling?.visibleFrom,
+      visibleUntil: nested.scheduling?.visibleUntil,
+      registrationOpensAt: nested.scheduling?.registrationOpensAt,
+      registrationClosesAt: nested.scheduling?.registrationClosesAt,
+      featured: nested.options?.featured || false,
+      cap: nested.options?.cap,
+      gallerySlug: nested.options?.gallerySlug,
+    };
+  }
+  
+  // Handle old flat structure
+  const event = rawEvent as CMSEvent;
   const slug = event.slug || slugify(event.title) || filename.replace('.json', '');
   return { ...event, slug };
 }
@@ -52,6 +243,23 @@ function normalizeEvent(event: CMSEvent, filename: string): CMSEvent {
 function normalizeGallery(gallery: CMSGallery, filename: string): CMSGallery {
   const slug = gallery.slug || slugify(gallery.title) || filename.replace('.json', '');
   return { ...gallery, slug };
+}
+
+// Normalize announcement
+function normalizeAnnouncement(raw: any, filename: string): CMSAnnouncement {
+  const slug = slugify(raw.title || '') || filename.replace('.json', '');
+  return {
+    slug,
+    title: raw.title || '',
+    body: raw.body || '',
+    image: raw.image,
+    link: raw.link,
+    linkText: raw.linkText || 'Learn More',
+    publishAt: raw.scheduling?.publishAt || raw.publishAt,
+    expireAt: raw.scheduling?.expireAt || raw.expireAt,
+    pinned: raw.scheduling?.pinned || raw.pinned || false,
+    scheduling: raw.scheduling,
+  };
 }
 
 export interface SectionButton {
@@ -136,6 +344,12 @@ export interface GalleriesListSection {
   maxGalleries: number;
 }
 
+export interface AnnouncementsSection {
+  type: "announcements";
+  heading: string;
+  maxAnnouncements: number;
+}
+
 export type PageSection =
   | HeroSection
   | TextSection
@@ -145,17 +359,44 @@ export type PageSection =
   | EmbedSection
   | SponsorsSection
   | EventsListSection
-  | GalleriesListSection;
+  | GalleriesListSection
+  | AnnouncementsSection;
 
 export interface CMSPage {
   title: string;
-  slug: string;
+  slug?: string;
   navLabel?: string;
   showInNav: boolean;
   navOrder?: number;
   parentMenu?: string | null;
   template: "landing" | "basic" | "gallery" | "eventHub";
   sections: PageSection[];
+  // New nested menu structure
+  menu?: {
+    showInNav: boolean;
+    navLabel?: string;
+    parentMenu?: string | null;
+    navOrder?: number;
+  };
+}
+
+// Normalize page to handle nested menu structure
+function normalizePage(raw: any, filename: string): CMSPage {
+  const slug = raw.slug || slugify(raw.title || '') || filename.replace('.json', '');
+  
+  // Handle nested menu structure
+  if (raw.menu) {
+    return {
+      ...raw,
+      slug,
+      showInNav: raw.menu.showInNav ?? true,
+      navLabel: raw.menu.navLabel || raw.title,
+      parentMenu: raw.menu.parentMenu,
+      navOrder: raw.menu.navOrder || 100,
+    };
+  }
+  
+  return { ...raw, slug };
 }
 
 export interface CMSGallery {
@@ -204,6 +445,7 @@ import sponsorTiersData from "@/content/sponsors/tiers.json";
 const pageModules = import.meta.glob("@/content/pages/*.json", { eager: true });
 const eventModules = import.meta.glob("@/content/events/*.json", { eager: true });
 const galleryModules = import.meta.glob("@/content/galleries/*.json", { eager: true });
+const announcementModules = import.meta.glob("@/content/announcements/*.json", { eager: true });
 
 // Helper to extract filename from path
 function getFilename(path: string): string {
@@ -216,17 +458,22 @@ export const sponsorTiers = sponsorTiersData.tiers as SponsorTier[];
 
 // Dynamically load all pages from the pages folder
 export const allPages: CMSPage[] = Object.entries(pageModules).map(
-  ([path, mod]: [string, any]) => mod.default as CMSPage
+  ([path, mod]: [string, any]) => normalizePage(mod.default, getFilename(path))
 );
 
-// Dynamically load all events from the events folder (with slug normalization)
+// Dynamically load all events from the events folder (with normalization)
 export const allEvents: CMSEvent[] = Object.entries(eventModules).map(
-  ([path, mod]: [string, any]) => normalizeEvent(mod.default as CMSEvent, getFilename(path))
+  ([path, mod]: [string, any]) => normalizeEvent(mod.default, getFilename(path))
 );
 
 // Dynamically load all galleries from the galleries folder (with slug normalization)
 export const allGalleries: CMSGallery[] = Object.entries(galleryModules).map(
   ([path, mod]: [string, any]) => normalizeGallery(mod.default as CMSGallery, getFilename(path))
+);
+
+// Dynamically load all announcements
+export const allAnnouncements: CMSAnnouncement[] = Object.entries(announcementModules).map(
+  ([path, mod]: [string, any]) => normalizeAnnouncement(mod.default, getFilename(path))
 );
 
 // Helper functions
@@ -265,14 +512,46 @@ export function getEventsByStatus(status: CMSEvent["status"]): CMSEvent[] {
   return allEvents.filter(e => e.status === status);
 }
 
+// Get visible events (respects scheduling)
+export function getVisibleEvents(): CMSEvent[] {
+  return allEvents.filter(isEventVisible);
+}
+
+// Get visible events with effective status calculated
+export function getVisibleEventsWithStatus(): (CMSEvent & { effectiveStatus: "open" | "upcoming" | "closed" })[] {
+  return getVisibleEvents().map(e => ({
+    ...e,
+    effectiveStatus: getEffectiveStatus(e),
+  }));
+}
+
 export function groupEventsByStatus() {
+  const visibleEvents = getVisibleEvents();
   return {
-    open: allEvents.filter(e => e.status === "open"),
-    upcoming: allEvents.filter(e => e.status === "upcoming"),
-    closed: allEvents.filter(e => e.status === "closed"),
+    open: visibleEvents.filter(e => getEffectiveStatus(e) === "open"),
+    upcoming: visibleEvents.filter(e => getEffectiveStatus(e) === "upcoming"),
+    closed: visibleEvents.filter(e => getEffectiveStatus(e) === "closed"),
   };
 }
 
 export function getFeaturedGalleries(): CMSGallery[] {
   return allGalleries.filter(g => g.featured);
+}
+
+// Get visible announcements (respects scheduling), sorted by pinned first then newest
+export function getVisibleAnnouncements(): CMSAnnouncement[] {
+  return allAnnouncements
+    .filter(isAnnouncementVisible)
+    .sort((a, b) => {
+      // Pinned first
+      const aPinned = a.scheduling?.pinned || a.pinned || false;
+      const bPinned = b.scheduling?.pinned || b.pinned || false;
+      if (aPinned && !bPinned) return -1;
+      if (!aPinned && bPinned) return 1;
+      
+      // Then by publish date (newest first)
+      const aDate = new Date(a.publishAt || 0);
+      const bDate = new Date(b.publishAt || 0);
+      return bDate.getTime() - aDate.getTime();
+    });
 }

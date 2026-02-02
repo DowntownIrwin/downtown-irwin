@@ -18,6 +18,7 @@ import About from "@/pages/About";
 import Galleries from "@/pages/Galleries";
 import GalleryDetail from "@/pages/GalleryDetail";
 import NotFound from "@/pages/not-found";
+import Preview from "@/pages/Preview";
 
 function AppRouter() {
   return (
@@ -36,6 +37,7 @@ function AppRouter() {
         <Route path="/contact" component={Contact} />
         <Route path="/galleries" component={Galleries} />
         <Route path="/galleries/:slug" component={GalleryDetail} />
+        <Route path="/preview/:type" component={Preview} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

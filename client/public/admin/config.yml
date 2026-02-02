@@ -18,120 +18,266 @@ collections:
     sortable_fields: ["startDate", "title"]
     summary: "{{title}} - {{startDate | date('MMM D, YYYY')}}"
     fields:
-      - label: "Event Title"
-        name: "title"
-        widget: "string"
-        required: true
-        hint: "The name of your event (e.g., 'Irwin Car Cruise 2026')"
+      - name: "basics"
+        label: "Event Details"
+        widget: "object"
+        collapsed: false
+        hint: "Basic information about your event"
+        fields:
+          - label: "Event Name"
+            name: "title"
+            widget: "string"
+            required: true
+            hint: "What is this event called? (e.g., 'Irwin Car Cruise 2026')"
 
-      - label: "Date"
-        name: "startDate"
-        widget: "datetime"
-        required: true
-        date_format: "MMMM D, YYYY"
-        time_format: false
-        hint: "When does the event take place?"
+          - label: "Event Date"
+            name: "startDate"
+            widget: "datetime"
+            required: true
+            date_format: "MMMM D, YYYY"
+            time_format: false
+            hint: "When does the event take place?"
 
-      - label: "End Date (if multi-day)"
-        name: "endDate"
-        widget: "datetime"
-        required: false
-        date_format: "MMMM D, YYYY"
-        time_format: false
-        hint: "Leave empty for single-day events"
+          - label: "End Date"
+            name: "endDate"
+            widget: "datetime"
+            required: false
+            date_format: "MMMM D, YYYY"
+            time_format: false
+            hint: "Only set this for multi-day events"
 
-      - label: "Hours"
-        name: "timeText"
-        widget: "string"
-        required: false
-        hint: "Example: 10 AM - 8 PM"
+          - label: "Hours"
+            name: "timeText"
+            widget: "string"
+            required: false
+            hint: "What time? (e.g., '10 AM - 8 PM')"
 
-      - label: "Location"
-        name: "location"
-        widget: "string"
-        required: false
-        default: "Main Street, Irwin PA"
-        hint: "Where is the event held?"
+          - label: "Location"
+            name: "location"
+            widget: "string"
+            required: false
+            default: "Main Street, Irwin PA"
+            hint: "Where is the event held?"
 
-      - label: "Description"
-        name: "description"
-        widget: "markdown"
-        required: true
-        hint: "Tell visitors what this event is about"
+          - label: "Event Category"
+            name: "eventType"
+            widget: "select"
+            options:
+              - { label: "Car Cruise", value: "car-cruise" }
+              - { label: "Street Market", value: "street-market" }
+              - { label: "Night Market", value: "night-market" }
+              - { label: "Other Event", value: "other" }
+            default: "other"
+            hint: "What type of event is this?"
 
-      - label: "Status"
-        name: "status"
-        widget: "select"
-        options:
-          - { label: "Open (taking signups)", value: "open" }
-          - { label: "Upcoming (not open yet)", value: "upcoming" }
-          - { label: "Closed (event ended)", value: "closed" }
-        default: "upcoming"
-        hint: "Is this event accepting registrations?"
+          - label: "Registration Status"
+            name: "status"
+            widget: "select"
+            options:
+              - { label: "Open (registration is live)", value: "open" }
+              - { label: "Upcoming (not open yet)", value: "upcoming" }
+              - { label: "Closed (registration ended)", value: "closed" }
+            default: "upcoming"
+            hint: "Can people sign up right now? This can be automated with scheduling below."
 
-      - label: "Event Type"
-        name: "eventType"
-        widget: "select"
-        options:
-          - { label: "Car Cruise", value: "car-cruise" }
-          - { label: "Street Market", value: "street-market" }
-          - { label: "Night Market", value: "night-market" }
-          - { label: "Other Event", value: "other" }
-        default: "other"
-        hint: "What kind of event is this?"
+      - name: "content"
+        label: "Content"
+        widget: "object"
+        collapsed: false
+        hint: "Description and imagery for the event"
+        fields:
+          - label: "Description"
+            name: "description"
+            widget: "markdown"
+            required: true
+            hint: "Tell visitors what this event is about"
 
-      - label: "Featured Event"
-        name: "featured"
-        widget: "boolean"
-        default: false
-        hint: "Show this event prominently on the homepage"
+          - label: "Hero Image"
+            name: "heroImage"
+            widget: "image"
+            required: false
+            hint: "Large banner image shown at the top of the event page"
 
-      - label: "Hero Image"
-        name: "heroImage"
-        widget: "image"
-        required: false
-        hint: "Large banner image for the event page"
-
-      - label: "Links & Signups"
-        name: "links"
+      - name: "links"
+        label: "Action Buttons"
         widget: "object"
         collapsed: true
-        hint: "Add signup and registration links"
+        hint: "Links for registration and signups - buttons appear on the event page"
         fields:
           - label: "Vendor Signup Link"
             name: "vendorUrl"
             widget: "string"
             required: false
-            hint: "Square or Jotform link for vendor applications"
+            hint: "Where do vendors apply? (Square, Jotform, etc.)"
 
-          - label: "Sponsor Link"
+          - label: "Sponsor Signup Link"
             name: "sponsorUrl"
             widget: "string"
             required: false
-            hint: "Link to sponsor signup form"
+            hint: "Where do sponsors sign up?"
 
           - label: "Attendee Registration Link"
             name: "attendeeUrl"
             widget: "string"
             required: false
-            hint: "Link for attendees to register or RSVP"
+            hint: "Where do attendees register or RSVP?"
 
-      - label: "Capacity Limit"
-        name: "cap"
-        widget: "number"
-        required: false
-        value_type: "int"
-        hint: "Maximum vendors or attendees (leave empty for unlimited)"
+          - label: "Always Show Buttons"
+            name: "forceShowButtons"
+            widget: "boolean"
+            default: false
+            hint: "Show buttons even when registration is closed (useful for info links)"
 
-      - label: "Photo Gallery"
-        name: "gallerySlug"
-        widget: "relation"
-        collection: "galleries"
-        value_field: "title"
-        search_fields: ["title"]
-        display_fields: ["title"]
+      - name: "scheduling"
+        label: "Scheduling (Optional)"
+        widget: "object"
+        collapsed: true
+        hint: "Automate when this event appears and when registration opens/closes"
+        fields:
+          - label: "Show Event Starting"
+            name: "visibleFrom"
+            widget: "datetime"
+            required: false
+            date_format: "MMMM D, YYYY"
+            time_format: "h:mm A"
+            hint: "Event will be hidden until this date/time"
+
+          - label: "Hide Event After"
+            name: "visibleUntil"
+            widget: "datetime"
+            required: false
+            date_format: "MMMM D, YYYY"
+            time_format: "h:mm A"
+            hint: "Event will be hidden after this date/time"
+
+          - label: "Registration Opens"
+            name: "registrationOpensAt"
+            widget: "datetime"
+            required: false
+            date_format: "MMMM D, YYYY"
+            time_format: "h:mm A"
+            hint: "Buttons become active at this time (status changes to Open)"
+
+          - label: "Registration Closes"
+            name: "registrationClosesAt"
+            widget: "datetime"
+            required: false
+            date_format: "MMMM D, YYYY"
+            time_format: "h:mm A"
+            hint: "Buttons become inactive after this time (status changes to Closed)"
+
+      - name: "options"
+        label: "Additional Options"
+        widget: "object"
+        collapsed: true
+        hint: "Extra settings for this event"
+        fields:
+          - label: "Featured Event"
+            name: "featured"
+            widget: "boolean"
+            default: false
+            hint: "Show this event prominently on the homepage"
+
+          - label: "Capacity Limit"
+            name: "cap"
+            widget: "number"
+            required: false
+            value_type: "int"
+            hint: "Maximum vendors or attendees (leave empty for unlimited)"
+
+          - label: "Photo Gallery"
+            name: "gallerySlug"
+            widget: "relation"
+            collection: "galleries"
+            value_field: "title"
+            search_fields: ["title"]
+            display_fields: ["title"]
+            required: false
+            hint: "Link to photos from this event"
+
+      - name: "preview"
+        label: "Preview"
+        widget: "object"
+        collapsed: true
+        hint: "Preview your event before publishing"
+        fields:
+          - label: "Preview Link"
+            name: "previewNote"
+            widget: "string"
+            required: false
+            default: "After saving, visit /events/[event-name] to preview"
+            hint: "Save and visit the event page to see how it looks"
+
+  - name: "announcements"
+    label: "Announcements"
+    label_singular: "Announcement"
+    folder: "client/src/content/announcements"
+    create: true
+    slug: "{{title | slug}}"
+    identifier_field: "title"
+    extension: "json"
+    format: "json"
+    sortable_fields: ["publishAt", "title"]
+    summary: "{{title}} {{#if pinned}}📌{{/if}}"
+    fields:
+      - label: "Title"
+        name: "title"
+        widget: "string"
+        required: true
+        hint: "Headline for this announcement"
+
+      - label: "Message"
+        name: "body"
+        widget: "markdown"
+        required: true
+        hint: "What do you want to announce?"
+
+      - label: "Image"
+        name: "image"
+        widget: "image"
         required: false
-        hint: "Link to a photo gallery for this event"
+        hint: "Optional image to display with the announcement"
+
+      - label: "Link"
+        name: "link"
+        widget: "string"
+        required: false
+        hint: "Optional: Link to more info (full URL)"
+
+      - label: "Link Text"
+        name: "linkText"
+        widget: "string"
+        required: false
+        default: "Learn More"
+        hint: "Text for the link button"
+
+      - name: "scheduling"
+        label: "Scheduling"
+        widget: "object"
+        collapsed: false
+        hint: "Control when this announcement appears"
+        fields:
+          - label: "Show Starting"
+            name: "publishAt"
+            widget: "datetime"
+            required: false
+            date_format: "MMMM D, YYYY"
+            time_format: "h:mm A"
+            hint: "Announcement appears after this date/time (leave empty to show immediately)"
+
+          - label: "Hide After"
+            name: "expireAt"
+            widget: "datetime"
+            required: false
+            date_format: "MMMM D, YYYY"
+            time_format: "h:mm A"
+            hint: "Announcement disappears after this date/time (leave empty to show forever)"
+
+          - label: "Pin to Top"
+            name: "pinned"
+            widget: "boolean"
+            default: false
+            hint: "Pinned announcements always appear first"
 
   - name: "galleries"
     label: "Photo Galleries"
@@ -189,6 +335,18 @@ collections:
         required: false
         hint: "Optional: Link to a Google Drive album with additional photos"
 
+      - name: "preview"
+        label: "Preview"
+        widget: "object"
+        collapsed: true
+        fields:
+          - label: "Preview Link"
+            name: "previewNote"
+            widget: "string"
+            required: false
+            default: "After saving, visit /galleries/[gallery-name] to preview"
+            hint: "Save and visit the gallery page to see how it looks"
+
   - name: "pages"
     label: "Pages"
     label_singular: "Page"
@@ -206,42 +364,41 @@ collections:
         required: true
         hint: "The title shown at the top of the page"
 
-      - label: "URL Path"
-        name: "slug"
-        widget: "string"
-        required: true
-        pattern: ['^[a-z0-9-]+$', "Use lowercase letters, numbers, and hyphens only"]
-        hint: "The URL for this page (e.g., 'about' creates /about)"
+      - name: "menu"
+        label: "Menu Settings"
+        widget: "object"
+        collapsed: false
+        hint: "How this page appears in navigation"
+        fields:
+          - label: "Show in Menu"
+            name: "showInNav"
+            widget: "boolean"
+            default: true
+            hint: "Should this page appear in the navigation menu?"
 
-      - label: "Show in Menu"
-        name: "showInNav"
-        widget: "boolean"
-        default: true
-        hint: "Should this page appear in the navigation menu?"
+          - label: "Menu Label"
+            name: "navLabel"
+            widget: "string"
+            required: false
+            hint: "Text shown in the menu (uses title if empty)"
 
-      - label: "Menu Label"
-        name: "navLabel"
-        widget: "string"
-        required: false
-        hint: "Text shown in the menu (uses title if empty)"
+          - label: "Parent Menu Item"
+            name: "parentMenu"
+            widget: "relation"
+            collection: "pages"
+            value_field: "title"
+            search_fields: ["title"]
+            display_fields: ["title"]
+            required: false
+            hint: "Make this a submenu item under another page"
 
-      - label: "Parent Menu Item"
-        name: "parentMenu"
-        widget: "relation"
-        collection: "pages"
-        value_field: "title"
-        search_fields: ["title"]
-        display_fields: ["title"]
-        required: false
-        hint: "Make this a submenu item under another page (leave empty for top-level)"
-
-      - label: "Menu Order"
-        name: "navOrder"
-        widget: "number"
-        required: false
-        value_type: "int"
-        default: 100
-        hint: "Lower numbers appear first in menu"
+          - label: "Menu Order"
+            name: "navOrder"
+            widget: "number"
+            required: false
+            value_type: "int"
+            default: 100
+            hint: "Lower numbers appear first in menu"
 
       - label: "Page Layout"
         name: "template"
@@ -364,6 +521,26 @@ collections:
               - { label: "Heading", name: "heading", widget: "string", default: "Photo Galleries" }
               - { label: "Featured Only", name: "featuredOnly", widget: "boolean", default: false }
               - { label: "Max Galleries to Show", name: "maxGalleries", widget: "number", value_type: "int", default: 6 }
+
+          - name: "announcements"
+            label: "Announcements"
+            widget: "object"
+            summary: "Announcements Section"
+            fields:
+              - { label: "Heading", name: "heading", widget: "string", default: "Latest Updates" }
+              - { label: "Max to Show", name: "maxAnnouncements", widget: "number", value_type: "int", default: 3 }
+
+      - name: "preview"
+        label: "Preview"
+        widget: "object"
+        collapsed: true
+        fields:
+          - label: "Preview Link"
+            name: "previewNote"
+            widget: "string"
+            required: false
+            default: "After saving, visit /[page-url] to preview"
+            hint: "Save and visit the page URL to see how it looks"
 
   - name: "site"
     label: "Site Settings"

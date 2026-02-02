@@ -6,10 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Calendar, MapPin, Clock, Loader2, Users, ExternalLink, Ticket, Search } from "lucide-react";
 import { Link } from "wouter";
 import { useEvents } from "@/hooks/useCMS";
-import { groupEventsByStatus, getEventUrls, type CMSEvent } from "@/lib/content";
+import { groupEventsByStatus, getEventUrls, getEffectiveStatus, shouldShowRegistrationButtons, getRegistrationMessage, type CMSEvent } from "@/lib/content";
 import { SEO } from "@/components/SEO";
 
 function EventCard({ event }: { event: CMSEvent }) {
+  const effectiveStatus = getEffectiveStatus(event);
+  const showButtons = shouldShowRegistrationButtons(event);
+  const registrationMsg = getRegistrationMessage(event);
+  
   const statusColors = {
     open: "bg-green-500",
     upcoming: "bg-blue-500",
@@ -41,8 +45,8 @@ function EventCard({ event }: { event: CMSEvent }) {
       )}
       <CardContent className="p-6">
         <div className="flex items-center gap-2 mb-3">
-          <Badge className={statusColors[event.status]}>
-            {statusLabels[event.status]}
+          <Badge className={statusColors[effectiveStatus]}>
+            {statusLabels[effectiveStatus]}
           </Badge>
           {event.featured && <Badge variant="outline">Featured</Badge>}
         </div>
@@ -76,12 +80,16 @@ function EventCard({ event }: { event: CMSEvent }) {
           )}
         </div>
 
+        {registrationMsg && (
+          <p className="text-sm text-muted-foreground mb-3 italic">{registrationMsg}</p>
+        )}
+
         <div className="flex flex-wrap gap-2">
           {(() => {
             const urls = getEventUrls(event);
             return (
               <>
-                {urls.vendorUrl && (
+                {urls.vendorUrl && showButtons && (
                   <a href={urls.vendorUrl} target="_blank" rel="noopener noreferrer">
                     <Button size="sm" variant="outline" data-testid={`button-vendor-${event.slug}`}>
                       <Users className="h-4 w-4 mr-1" />
@@ -89,7 +97,7 @@ function EventCard({ event }: { event: CMSEvent }) {
                     </Button>
                   </a>
                 )}
-                {urls.sponsorUrl && (
+                {urls.sponsorUrl && showButtons && (
                   <a href={urls.sponsorUrl} target="_blank" rel="noopener noreferrer">
                     <Button size="sm" variant="outline" data-testid={`button-sponsor-${event.slug}`}>
                       <ExternalLink className="h-4 w-4 mr-1" />
@@ -97,7 +105,7 @@ function EventCard({ event }: { event: CMSEvent }) {
                     </Button>
                   </a>
                 )}
-                {urls.attendeeUrl && (
+                {urls.attendeeUrl && showButtons && (
                   <a href={urls.attendeeUrl} target="_blank" rel="noopener noreferrer">
                     <Button size="sm" data-testid={`button-register-${event.slug}`}>
                       <Ticket className="h-4 w-4 mr-1" />
