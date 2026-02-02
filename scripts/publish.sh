@@ -34,7 +34,7 @@ npm run build || {
 
 echo ""
 echo "3. Creating 404.html for client-side routing..."
-cp dist/index.html dist/404.html 2>/dev/null || echo "Note: dist/index.html not found, skipping 404.html"
+cp dist/public/index.html dist/public/404.html 2>/dev/null || echo "Note: dist/public/index.html not found, skipping 404.html"
 
 echo ""
 echo "4. Checking git status..."
