@@ -232,8 +232,8 @@ export function Header() {
             </span>
           </Link>
 
-          <DesktopNav items={hardcodedNav} />
-          <MobileNav items={hardcodedNav} isOpen={isOpen} setIsOpen={setIsOpen} />
+          <DesktopNav items={navItems} />
+          <MobileNav items={navItems} isOpen={isOpen} setIsOpen={setIsOpen} />
         </div>
       </div>
     </header>
