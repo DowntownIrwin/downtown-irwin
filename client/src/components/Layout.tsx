@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Menu, MapPin, Mail, Phone, Facebook, Instagram, ChevronDown, ArrowUp } from "lucide-react";
+import { Menu, MapPin, Mail, Phone, Facebook, Instagram, ChevronDown, ChevronRight, ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import {
@@ -8,22 +8,69 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useState, useEffect } from "react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { useState, useEffect, useMemo } from "react";
+import { allPages, type CMSPage } from "@/lib/content";
 
-const eventSubLinks = [
-  { href: "/events", label: "All Events" },
-  { href: "/car-cruise", label: "Car Cruise" },
-  { href: "/street-market", label: "Street Market" },
-  { href: "/night-market", label: "Night Market" },
-];
+interface NavItem {
+  href: string;
+  label: string;
+  children?: NavItem[];
+}
 
-const mobileNavLinks = [
+function buildNavigation(pages: CMSPage[]): NavItem[] {
+  const navPages = pages
+    .filter(p => p.showInNav)
+    .sort((a, b) => (a.navOrder || 100) - (b.navOrder || 100));
+  
+  const topLevel: NavItem[] = [];
+  const childrenMap: Map<string, NavItem[]> = new Map();
+  
+  navPages.forEach(page => {
+    const navItem: NavItem = {
+      href: `/${page.slug}`,
+      label: page.navLabel || page.title,
+    };
+    
+    if (page.parentMenu) {
+      const existing = childrenMap.get(page.parentMenu) || [];
+      existing.push(navItem);
+      childrenMap.set(page.parentMenu, existing);
+    } else {
+      topLevel.push(navItem);
+    }
+  });
+  
+  topLevel.forEach(item => {
+    const parentPage = navPages.find(p => (p.navLabel || p.title) === item.label);
+    if (parentPage) {
+      const children = childrenMap.get(parentPage.title);
+      if (children && children.length > 0) {
+        item.children = children;
+      }
+    }
+  });
+  
+  return topLevel;
+}
+
+const hardcodedNav: NavItem[] = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About" },
-  { href: "/events", label: "Events" },
-  { href: "/car-cruise", label: "Car Cruise" },
-  { href: "/street-market", label: "Street Market" },
-  { href: "/night-market", label: "Night Market" },
+  { 
+    href: "/events", 
+    label: "Events",
+    children: [
+      { href: "/events", label: "All Events" },
+      { href: "/car-cruise", label: "Car Cruise" },
+      { href: "/street-market", label: "Street Market" },
+      { href: "/night-market", label: "Night Market" },
+    ]
+  },
   { href: "/calendar", label: "Calendar" },
   { href: "/galleries", label: "Galleries" },
   { href: "/vendors", label: "Vendors" },
@@ -52,9 +99,128 @@ function NavLink({ href, label, onClick }: { href: string; label: string; onClic
   );
 }
 
+function DesktopNav({ items }: { items: NavItem[] }) {
+  const [location] = useLocation();
+  
+  return (
+    <nav className="hidden lg:flex items-center gap-6">
+      {items.map((item) => {
+        if (item.children && item.children.length > 0) {
+          const isChildActive = item.children.some(child => location === child.href);
+          return (
+            <DropdownMenu key={item.href}>
+              <DropdownMenuTrigger 
+                className={`flex items-center gap-1 text-sm font-medium transition-colors ${
+                  isChildActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                }`}
+                data-testid={`nav-dropdown-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+              >
+                {item.label}
+                <ChevronDown className="h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {item.children.map((child) => (
+                  <DropdownMenuItem key={child.href} asChild>
+                    <Link href={child.href}>
+                      <span 
+                        className="cursor-pointer w-full" 
+                        data-testid={`nav-link-${child.label.toLowerCase().replace(/\s+/g, '-')}`}
+                      >
+                        {child.label}
+                      </span>
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
+        }
+        return <NavLink key={item.href} href={item.href} label={item.label} />;
+      })}
+    </nav>
+  );
+}
+
+function MobileNavItem({ item, onClose }: { item: NavItem; onClose: () => void }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [location] = useLocation();
+  
+  if (item.children && item.children.length > 0) {
+    return (
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger className="flex items-center justify-between w-full py-2 text-sm font-medium text-muted-foreground hover:text-foreground">
+          {item.label}
+          <ChevronRight className={`h-4 w-4 transition-transform ${isOpen ? "rotate-90" : ""}`} />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="pl-4 space-y-2">
+          {item.children.map((child) => (
+            <SheetClose key={child.href} asChild>
+              <div>
+                <Link href={child.href}>
+                  <span
+                    onClick={onClose}
+                    className={`block py-1 text-sm cursor-pointer ${
+                      location === child.href ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                    data-testid={`mobile-nav-${child.label.toLowerCase().replace(/\s+/g, '-')}`}
+                  >
+                    {child.label}
+                  </span>
+                </Link>
+              </div>
+            </SheetClose>
+          ))}
+        </CollapsibleContent>
+      </Collapsible>
+    );
+  }
+  
+  return (
+    <SheetClose asChild>
+      <div>
+        <Link href={item.href}>
+          <span
+            onClick={onClose}
+            className={`block py-2 text-sm font-medium cursor-pointer ${
+              location === item.href ? "text-primary" : "text-muted-foreground hover:text-foreground"
+            }`}
+            data-testid={`mobile-nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+          >
+            {item.label}
+          </span>
+        </Link>
+      </div>
+    </SheetClose>
+  );
+}
+
+function MobileNav({ items, isOpen, setIsOpen }: { items: NavItem[]; isOpen: boolean; setIsOpen: (open: boolean) => void }) {
+  return (
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetTrigger asChild className="lg:hidden">
+        <Button variant="ghost" size="icon" data-testid="button-mobile-menu">
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Toggle menu</span>
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="right" className="w-[280px] sm:w-[350px]">
+        <div className="flex flex-col gap-1 mt-8">
+          {items.map((item) => (
+            <MobileNavItem key={item.href} item={item} onClose={() => setIsOpen(false)} />
+          ))}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
+  
+  const navItems = useMemo(() => {
+    const cmsNav = buildNavigation(allPages);
+    return cmsNav.length > 0 ? cmsNav : hardcodedNav;
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -66,56 +232,8 @@ export function Header() {
             </span>
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-6">
-            <NavLink href="/" label="Home" />
-            <NavLink href="/about" label="About" />
-            <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors" data-testid="nav-events-dropdown">
-                Events
-                <ChevronDown className="h-4 w-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                {eventSubLinks.map((link) => (
-                  <DropdownMenuItem key={link.href} asChild>
-                    <Link href={link.href}>
-                      <span className="cursor-pointer w-full" data-testid={`nav-link-${link.label.toLowerCase().replace(/\s+/g, '-')}`}>
-                        {link.label}
-                      </span>
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <NavLink href="/calendar" label="Calendar" />
-            <NavLink href="/galleries" label="Galleries" />
-            <NavLink href="/vendors" label="Vendors" />
-            <NavLink href="/sponsors" label="Sponsors" />
-            <NavLink href="/contact" label="Contact" />
-          </nav>
-
-          <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetTrigger asChild className="lg:hidden">
-              <Button variant="ghost" size="icon" data-testid="button-mobile-menu">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[280px] sm:w-[350px]">
-              <div className="flex flex-col gap-4 mt-8">
-                {mobileNavLinks.map((link) => (
-                  <SheetClose key={link.href} asChild>
-                    <div>
-                      <NavLink
-                        href={link.href}
-                        label={link.label}
-                        onClick={() => setIsOpen(false)}
-                      />
-                    </div>
-                  </SheetClose>
-                ))}
-              </div>
-            </SheetContent>
-          </Sheet>
+          <DesktopNav items={hardcodedNav} />
+          <MobileNav items={hardcodedNav} isOpen={isOpen} setIsOpen={setIsOpen} />
         </div>
       </div>
     </header>

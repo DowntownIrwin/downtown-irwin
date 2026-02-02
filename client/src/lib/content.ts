@@ -153,6 +153,7 @@ export interface CMSPage {
   navLabel?: string;
   showInNav: boolean;
   navOrder?: number;
+  parentMenu?: string | null;
   template: "landing" | "basic" | "gallery" | "eventHub";
   sections: PageSection[];
 }
