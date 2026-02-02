@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Router } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -16,7 +16,7 @@ import NightMarket from "@/pages/NightMarket";
 import Contact from "@/pages/Contact";
 import NotFound from "@/pages/not-found";
 
-function Router() {
+function AppRouter() {
   return (
     <Layout>
       <Switch>
@@ -36,12 +36,16 @@ function Router() {
   );
 }
 
+const BASE_PATH = import.meta.env.PROD ? "/downtown-irwin" : "";
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Router />
+        <Router base={BASE_PATH}>
+          <Toaster />
+          <AppRouter />
+        </Router>
       </TooltipProvider>
     </QueryClientProvider>
   );
