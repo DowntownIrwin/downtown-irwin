@@ -1,0 +1,88 @@
+Git Gateway Integration
+Done
+Today at 12:02 PM
+by
+RRon Palarino
+Ron Palarino
+Based on
+main
+@
+435ad20
+No changes to preview
+
+Create follow-up
+Archive task
+Fancy a game?
+This agent run is done, but hey, you can still play if you want to!
+Play game
+Runs
+Logs
+Done
+git gateway
+1m 51s
+R
+Ron Palarino
+
+Prompt
+git gateway
+
+Claude Agent took 1m 51s
+Result
+This project uses Git Gateway as the backend for Decap CMS (formerly Netlify CMS), enabling non-technical editors to manage website content through a visual interface without needing Git knowledge.
+
+Current Git Gateway Configuration
+
+CMS Backend Setup
+
+The CMS configuration at client/public/admin/config.yml specifies Git Gateway as the backend:
+
+backend:
+  name: git-gateway
+  branch: main
+This allows authenticated users to commit content changes directly to the main branch via Netlify's Git Gateway service.
+
+Identity Widget Integration
+
+The Netlify Identity widget is integrated in two locations:
+
+Main site (client/index.html) - Loads the identity widget and auto-redirects authenticated users to /admin/ on login
+Admin interface (client/public/admin/index.html) - Loads both the identity widget and Decap CMS for the editorial experience
+Redirect Configuration
+
+The netlify.toml and client/public/_redirects files ensure the admin interface is served correctly:
+
+/admin/* routes are served directly (not treated as SPA routes)
+All other routes fall back to index.html for client-side routing
+Content Management
+
+The CMS manages several content collections stored as JSON files:
+
+Events - client/src/content/events/
+Pages - client/src/content/pages/
+Photo Galleries - client/src/content/galleries/
+Site Settings - client/src/content/site.json
+Sponsor Tiers - client/src/content/sponsors/tiers.json
+Media uploads are stored in client/public/uploads and served at /uploads.
+
+Netlify Setup Requirements
+
+For Git Gateway to function, the following must be configured in the Netlify dashboard:
+
+Enable Netlify Identity - Site settings > Identity > Enable Identity
+Set registration to "Invite only" - Recommended for security
+Enable Git Gateway - Site settings > Identity > Services > Enable Git Gateway
+Invite editors - Identity tab > Invite users via email
+Ensure Git permissions - Git Gateway requires read/write access to the connected repository
+How It Works
+
+When an editor publishes content through Decap CMS:
+
+Editor authenticates via Netlify Identity at /admin/
+Makes changes using the visual CMS interface
+Clicks "Publish" to commit changes
+Git Gateway commits the changes to GitHub on the user's behalf
+The site rebuilds and deploys automatically
+This setup provides a complete content management workflow without requiring editors to interact with Git directly.
+Did you find this helpful? Your feedback helps improve this feature.
+
+
