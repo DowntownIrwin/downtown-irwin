@@ -1,0 +1,5 @@
+# Serve admin folder directly (don't redirect to SPA)
+/admin/* /admin/:splat 200
+
+# SPA fallback - all other routes go to index.html
+/* /index.html 200
