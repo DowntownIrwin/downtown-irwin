@@ -1,0 +1,65 @@
+Implement an internal Calendar system and submenu navigation.
+
+A) Replace EventsCalendar.co embed:
+- Remove the current calendar embed usage entirely.
+- Build a native calendar page at /calendar powered by CMS events.
+- Calendar must have:
+  1) Month grid view (with days, event chips)
+  2) Agenda/List view (upcoming events with cards)
+  3) Clicking an event opens either:
+     - a modal with key details + CTA buttons, AND/OR
+     - links to /events/:slug
+- Design should visually resemble EventsCalendar.co: clean, modern, readable, mobile-friendly.
+- Include filtering controls:
+  - Status: Open / Upcoming / Closed
+  - Category: Car Cruise / Street Market / Night Market / Other (optional)
+- Performance: only load events once and cache for 10 minutes (same pattern as elsewhere).
+
+B) CMS fields to support calendar + event cards:
+- In Events collection, ensure these fields exist:
+  - title
+  - startDate (datetime)
+  - endDate (datetime optional)
+  - timeText (optional display string)
+  - location
+  - description
+  - status (open/upcoming/closed)
+  - category (select: car-cruise, street-market, night-market, other)
+  - heroImage (image upload)
+  - links object:
+      links:
+        vendor: { label, url }
+        sponsor: { label, url }
+        attend: { label, url }
+  - featured (bool)
+- Backwards compatibility: components must support old flat fields vendorUrl/sponsorUrl/attendeeUrl if they exist.
+
+C) Admin UX:
+- Make the Events editor NOT text heavy:
+  - Order fields: Title, Dates, Hours, Location, Status, Category, Hero image, Description, Links.
+  - Hide slug or auto-generate from title; editors should never type slug.
+  - Add “Preview URL” hint (read-only) that shows:
+    /events/<slug>
+- When admin publishes a new event, it must automatically appear in:
+  - /events
+  - /calendar (month + list)
+  after Netlify rebuild, with no manual code edits.
+
+D) Submenu navigation:
+- In Pages CMS collection, add fields:
+  - showInMenu (bool)
+  - menuLabel (string)
+  - parentMenu (relation/select) to choose a parent page that is also showInMenu
+  - menuOrder (number)
+- Update site navigation builder:
+  - Top-level items: showInMenu=true and no parentMenu
+  - Submenu items: showInMenu=true and parentMenu set
+  - Sort by menuOrder
+- Render dropdown submenu on desktop; accordion submenu on mobile.
+- Example should support: Events > Car Cruise / Street Market / Night Market.
+
+Deliverables:
+- Updated Decap config.yml for Events and Pages (fields + better labels)
+- Updated React routes and UI for /calendar
+- Updated nav rendering for submenu
+- Ensure CMS Publish creates commits via Git Gateway (no shell or git push for content edits).
