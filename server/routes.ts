@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { adminDataSchema, contactFormSchema } from "@shared/schema";
 import path from "path";
 import fs from "fs";
+import express from "express";
 
 const ADMIN_PASSCODE = process.env.ADMIN_PASSCODE || "irwin2026";
 
@@ -12,41 +13,24 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   
-  // Serve Decap CMS admin page
-  app.get("/admin", (req, res, next) => {
-    const adminPath = path.resolve(
-      import.meta.dirname,
-      "..",
-      "client",
-      "public",
-      "admin",
-      "index.html"
-    );
-    if (fs.existsSync(adminPath)) {
-      res.status(200).set({ "Content-Type": "text/html" }).sendFile(adminPath);
-    } else {
-      next();
+  // Serve Decap CMS admin directory as static files
+  const adminDir = path.resolve(import.meta.dirname, "..", "client", "public", "admin");
+  app.use("/admin", express.static(adminDir, {
+    index: "index.html",
+    setHeaders: (res) => {
+      res.set("Cache-Control", "no-cache, no-store, must-revalidate");
     }
-  });
-
-  // Serve admin config.yml (multiple path patterns)
-  const serveConfigYml = (req: any, res: any, next: any) => {
-    const configPath = path.resolve(
-      import.meta.dirname,
-      "..",
-      "client",
-      "public",
-      "admin",
-      "config.yml"
-    );
+  }));
+  
+  // Also serve config.yml at root for relative path resolution
+  app.get("/config.yml", (req, res, next) => {
+    const configPath = path.resolve(adminDir, "config.yml");
     if (fs.existsSync(configPath)) {
       res.status(200).set({ "Content-Type": "text/yaml", "Cache-Control": "no-cache" }).sendFile(configPath);
     } else {
       next();
     }
-  };
-  app.get("/admin/config.yml", serveConfigYml);
-  app.get("/config.yml", serveConfigYml);
+  });
 
   app.get("/api/admin/data", async (req, res) => {
     try {
