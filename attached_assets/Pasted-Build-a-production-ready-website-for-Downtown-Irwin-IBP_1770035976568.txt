@@ -1,0 +1,58 @@
+Build a production-ready website for “Downtown Irwin (IBPA)” that will eventually replace irwinbpa.com and include irwincarcruise.org content.
+
+Tech:
+- React + Vite
+- Static build output suitable for GitHub Pages deployment
+- No server-side rendering required
+- Site content is driven by JSON from a Google Apps Script endpoint (CMS in Google Sheets)
+
+Core requirements:
+1) Pages:
+- Home (/)
+- Events index (/events)
+- Event detail (/events/:slug)
+- Calendar (/calendar) embedding EventsCalendar.co (embed code comes from CMS JSON)
+- Vendors (/vendors) with per-event vendor signup links
+- Sponsors (/sponsors) showing sponsorship tier cards and “Sponsor Now” buttons
+- Car Cruise hub (/car-cruise) (pulls from the event with slug containing “car-cruise”)
+- Street Market hub (/street-market)
+- Night Market hub (/night-market)
+- Contact (/contact)
+
+2) CMS/JSON:
+- Create a config file src/config.ts with:
+  - CMS_BASE_URL = "<APPS_SCRIPT_WEB_APP_URL>"
+  - SPONSORS_LOGO_JSON_URL = "https://jotform-sponsor-fetch.replit.app/api/sponsors.json" (existing)
+- On app load, fetch:
+  - `${CMS_BASE_URL}?route=site`
+  - `${CMS_BASE_URL}?route=events`
+  - `${CMS_BASE_URL}?route=sponsorTiers`
+- Cache responses in localStorage for 10 minutes for speed.
+
+3) Sponsors:
+- Sponsors page shows tier cards from sponsorTiers with benefits and Square URL buttons.
+- Add a “Sponsor logos” section that fetches SPONSORS_LOGO_JSON_URL and renders:
+  - presenting, gold, silver logos
+  - supporting sponsor names text-only
+- If tiers all empty, show “Sponsors to be announced soon…”
+
+4) Events:
+- Events index shows cards grouped by status (Open / Upcoming / Closed).
+- Each event card includes buttons:
+  - Vendor Signup
+  - Sponsor This Event
+  - Attend/Register (optional)
+- Event detail page shows the same plus cap/status.
+
+5) Calendar:
+- Calendar page renders an embed HTML snippet provided by CMS JSON field `events_calendar_embed`.
+
+6) Styling:
+- Clean, civic/professional vibe, mobile-first.
+- No drastic color schemes required; use neutral defaults.
+- Keep it “Wix-simple”: big buttons, editable sections, obvious CTAs.
+
+Deliverables:
+- Provide full file tree
+- Ensure `npm run build` produces a working static site
+- Include deployment instructions for GitHub Pages including copying index.html to 404.html

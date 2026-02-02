@@ -1,0 +1,30 @@
+{
+  "announcements": [
+    {
+      "id": "1",
+      "title": "Summer Events",
+      "content": "Check out our upcoming summer events including the famous Irwin Car Cruise!",
+      "active": true
+    }
+  ],
+  "featuredEvents": [
+    {
+      "id": "1",
+      "title": "Irwin Car Cruise 2026",
+      "date": "August 15, 2026",
+      "description": "Join us for the biggest car cruise in the region! Classic cars, live music, and family fun."
+    },
+    {
+      "id": "2",
+      "title": "Summer Farmers Market",
+      "date": "Every Saturday",
+      "description": "Fresh local produce, artisan goods, and community connection in Downtown Irwin."
+    },
+    {
+      "id": "3",
+      "title": "Fall Harvest Festival",
+      "date": "October 10, 2026",
+      "description": "Celebrate the harvest season with local vendors, pumpkin decorating, and autumn treats."
+    }
+  ]
+}
