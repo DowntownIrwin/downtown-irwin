@@ -9,5 +9,34 @@
   </head>
   <body>
     <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+    <script>
+      (function() {
+        var INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes in milliseconds
+        var inactivityTimer;
+
+        function performLogout() {
+          if (window.netlifyIdentity) {
+            window.netlifyIdentity.logout();
+          }
+          localStorage.clear();
+          sessionStorage.clear();
+          window.location.href = '/';
+        }
+
+        function resetInactivityTimer() {
+          clearTimeout(inactivityTimer);
+          inactivityTimer = setTimeout(performLogout, INACTIVITY_TIMEOUT);
+        }
+
+        // Track user activity events
+        var activityEvents = ['mousedown', 'mousemove', 'keydown', 'touchstart', 'scroll', 'click'];
+        activityEvents.forEach(function(event) {
+          document.addEventListener(event, resetInactivityTimer, { passive: true });
+        });
+
+        // Start the timer when page loads
+        resetInactivityTimer();
+      })();
+    </script>
   </body>
 </html>
