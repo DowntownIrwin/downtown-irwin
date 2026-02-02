@@ -1,0 +1,23 @@
+{
+  "title": "Community Events",
+  "slug": "events",
+  "navLabel": "Events",
+  "showInNav": true,
+  "navOrder": 3,
+  "template": "eventHub",
+  "sections": [
+    {
+      "type": "text",
+      "heading": "Community Events",
+      "body": "Discover what's happening in Downtown Irwin. From seasonal festivals to weekly markets, there's always something to enjoy in our community.",
+      "alignment": "center"
+    },
+    {
+      "type": "eventsList",
+      "heading": "",
+      "filterType": "all",
+      "featuredOnly": false,
+      "maxEvents": 100
+    }
+  ]
+}

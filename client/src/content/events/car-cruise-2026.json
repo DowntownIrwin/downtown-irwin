@@ -1,0 +1,18 @@
+{
+  "slug": "car-cruise-2026",
+  "title": "Irwin Car Cruise 2026",
+  "startDate": "2026-08-15",
+  "endDate": null,
+  "timeText": "10:00 AM - 8:00 PM",
+  "location": "Main Street, Irwin",
+  "description": "Annual car cruise event featuring classic cars, live music, food vendors, and family fun in downtown Irwin. Join us for one of the biggest car shows in Western Pennsylvania!",
+  "status": "upcoming",
+  "cap": null,
+  "vendorUrl": null,
+  "sponsorUrl": null,
+  "attendeeUrl": null,
+  "heroImage": null,
+  "gallerySlug": null,
+  "featured": true,
+  "eventType": "car-cruise"
+}

@@ -1,0 +1,23 @@
+{
+  "title": "Become a Vendor",
+  "slug": "vendors",
+  "navLabel": "Vendors",
+  "showInNav": true,
+  "navOrder": 7,
+  "template": "basic",
+  "sections": [
+    {
+      "type": "text",
+      "heading": "Become a Vendor",
+      "body": "Interested in selling at one of our community events? Sign up below to participate in upcoming markets and festivals. We welcome local artisans, food vendors, and businesses.",
+      "alignment": "center"
+    },
+    {
+      "type": "eventsList",
+      "heading": "Events Open for Vendors",
+      "filterType": "all",
+      "featuredOnly": false,
+      "maxEvents": 10
+    }
+  ]
+}

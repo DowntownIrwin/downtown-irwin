@@ -3,17 +3,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Car, Calendar, MapPin, Music, Utensils, Users, Crown, Award, Medal, Heart, ExternalLink, Loader2, Ticket } from "lucide-react";
 import { Link } from "wouter";
-import { useEvents, useSponsorLogos } from "@/hooks/useCMS";
-import { findCarCruiseEvent } from "@/lib/cms";
+import { useEventsByType, useSponsorLogos } from "@/hooks/useCMS";
 import type { SponsorLogosData } from "@shared/types";
 import { SEO } from "@/components/SEO";
 
 function SponsorSection({ sponsors }: { sponsors: SponsorLogosData }) {
   const allEmpty = 
-    sponsors.presenting.length === 0 && 
-    sponsors.gold.length === 0 && 
-    sponsors.silver.length === 0 && 
-    sponsors.supporting.length === 0;
+    (sponsors.presenting?.length || 0) === 0 && 
+    (sponsors.gold?.length || 0) === 0 && 
+    (sponsors.silver?.length || 0) === 0 && 
+    (sponsors.supporting?.length || 0) === 0;
 
   if (allEmpty) {
     return (
@@ -27,9 +26,9 @@ function SponsorSection({ sponsors }: { sponsors: SponsorLogosData }) {
   }
 
   const tiers = [
-    { key: 'presenting' as const, label: 'Presenting Sponsors', icon: Crown, color: 'bg-amber-500', sponsors: sponsors.presenting },
-    { key: 'gold' as const, label: 'Gold Sponsors', icon: Award, color: 'bg-yellow-500', sponsors: sponsors.gold },
-    { key: 'silver' as const, label: 'Silver Sponsors', icon: Medal, color: 'bg-slate-400', sponsors: sponsors.silver },
+    { key: 'presenting' as const, label: 'Presenting Sponsors', icon: Crown, color: 'bg-amber-500', sponsors: sponsors.presenting || [] },
+    { key: 'gold' as const, label: 'Gold Sponsors', icon: Award, color: 'bg-yellow-500', sponsors: sponsors.gold || [] },
+    { key: 'silver' as const, label: 'Silver Sponsors', icon: Medal, color: 'bg-slate-400', sponsors: sponsors.silver || [] },
   ];
 
   return (
@@ -50,7 +49,7 @@ function SponsorSection({ sponsors }: { sponsors: SponsorLogosData }) {
                 <h3 className="text-xl font-semibold">{tier.label}</h3>
               </div>
               <div className="flex flex-wrap justify-center gap-6">
-                {tier.sponsors.map((sponsor, index) => (
+                {tier.sponsors.filter(s => s && s.name).map((sponsor, index) => (
                   <a
                     key={index}
                     href={sponsor.website || '#'}
@@ -69,7 +68,7 @@ function SponsorSection({ sponsors }: { sponsors: SponsorLogosData }) {
                       ) : (
                         <div className="h-16 w-16 mx-auto mb-2 bg-muted rounded-lg flex items-center justify-center">
                           <span className="text-2xl font-bold text-muted-foreground">
-                            {sponsor.name.charAt(0)}
+                            {sponsor.name?.charAt(0) || '?'}
                           </span>
                         </div>
                       )}
@@ -82,7 +81,7 @@ function SponsorSection({ sponsors }: { sponsors: SponsorLogosData }) {
           );
         })}
 
-        {sponsors.supporting.length > 0 && (
+        {(sponsors.supporting?.length || 0) > 0 && (
           <div className="mt-12">
             <div className="flex items-center justify-center gap-3 mb-6">
               <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
@@ -91,9 +90,9 @@ function SponsorSection({ sponsors }: { sponsors: SponsorLogosData }) {
               <h3 className="text-xl font-semibold">Supporting Sponsors</h3>
             </div>
             <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-muted-foreground">
-              {sponsors.supporting.map((name, index) => (
+              {(sponsors.supporting || []).map((name, index) => (
                 <span key={index} className="text-sm">
-                  {name}{index < sponsors.supporting.length - 1 ? " •" : ""}
+                  {name}{index < (sponsors.supporting?.length || 0) - 1 ? " •" : ""}
                 </span>
               ))}
             </div>
@@ -105,10 +104,10 @@ function SponsorSection({ sponsors }: { sponsors: SponsorLogosData }) {
 }
 
 export default function CarCruise() {
-  const { data: events, isLoading: eventsLoading } = useEvents();
+  const { data: carCruiseEvents, isLoading: eventsLoading } = useEventsByType("car-cruise");
   const { data: sponsors, isLoading: sponsorsLoading } = useSponsorLogos();
   
-  const event = events ? findCarCruiseEvent(events) : undefined;
+  const event = carCruiseEvents?.[0];
   const isLoading = eventsLoading || sponsorsLoading;
 
   const statusLabels = {
@@ -116,6 +115,12 @@ export default function CarCruise() {
     upcoming: "Coming Soon",
     closed: "Event Ended",
   };
+
+  const displayDate = event ? new Date(event.startDate).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }) : null;
 
   return (
     <div>
@@ -142,7 +147,7 @@ export default function CarCruise() {
               <div className="flex flex-wrap gap-6 text-sm">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-5 w-5" />
-                  <span>{event.date}</span>
+                  <span>{displayDate}</span>
                 </div>
                 {event.location && (
                   <div className="flex items-center gap-2">
@@ -288,24 +293,24 @@ export default function CarCruise() {
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-3">
-                    {event.register_url && (
-                      <a href={event.register_url} target="_blank" rel="noopener noreferrer">
+                    {event.attendeeUrl && (
+                      <a href={event.attendeeUrl} target="_blank" rel="noopener noreferrer">
                         <Button data-testid="button-register-vehicle">
                           <Ticket className="h-4 w-4 mr-2" />
                           Register Vehicle
                         </Button>
                       </a>
                     )}
-                    {event.vendor_signup_url && (
-                      <a href={event.vendor_signup_url} target="_blank" rel="noopener noreferrer">
+                    {event.vendorUrl && (
+                      <a href={event.vendorUrl} target="_blank" rel="noopener noreferrer">
                         <Button variant="outline" data-testid="button-vendor-signup">
                           <Users className="h-4 w-4 mr-2" />
                           Vendor Signup
                         </Button>
                       </a>
                     )}
-                    {event.sponsor_url && (
-                      <a href={event.sponsor_url} target="_blank" rel="noopener noreferrer">
+                    {event.sponsorUrl && (
+                      <a href={event.sponsorUrl} target="_blank" rel="noopener noreferrer">
                         <Button variant="outline" data-testid="button-sponsor-event">
                           <ExternalLink className="h-4 w-4 mr-2" />
                           Sponsor

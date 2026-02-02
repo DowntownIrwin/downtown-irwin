@@ -1,0 +1,22 @@
+{
+  "title": "Events Calendar",
+  "slug": "calendar",
+  "navLabel": "Calendar",
+  "showInNav": true,
+  "navOrder": 9,
+  "template": "basic",
+  "sections": [
+    {
+      "type": "text",
+      "heading": "Events Calendar",
+      "body": "View all upcoming Downtown Irwin events in our interactive calendar.",
+      "alignment": "center"
+    },
+    {
+      "type": "embed",
+      "heading": "",
+      "embedHtml": "<iframe src=\"https://www.eventscalendar.co/calendar?app_id=proj_dJGH0ihOCO4zdcz1EA5VE\" style=\"width:100%;height:600px;border:none;\"></iframe>",
+      "maxWidth": "full"
+    }
+  ]
+}

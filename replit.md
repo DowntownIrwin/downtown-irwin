@@ -1,36 +1,48 @@
 # Downtown Irwin / IBPA Website
 
 ## Overview
-A production-ready community website for Downtown Irwin and the Irwin Business & Professional Association (IBPA). Built with React + Vite for static deployment to GitHub Pages. Content is driven by JSON from a Google Apps Script CMS endpoint.
+A production-ready community website for Downtown Irwin and the Irwin Business & Professional Association (IBPA). Built with React + Vite for static deployment. Content is managed via Decap CMS (formerly Netlify CMS) with a Wix-like admin dashboard.
 
 ## Tech Stack
 - **Frontend**: React 18, TypeScript, Vite
 - **Styling**: Tailwind CSS, shadcn/ui components
 - **Routing**: Wouter (client-side)
-- **Data Fetching**: TanStack Query with localStorage caching
-- **Build**: Static site output for GitHub Pages
+- **CMS**: Decap CMS with Netlify Identity + Git Gateway
+- **Data**: JSON content files in `client/src/content/`
+- **Build**: Static site output
 
 ## Project Structure
 
 ```
 client/
+  public/
+    admin/
+      index.html           # Decap CMS admin dashboard
+      config.yml           # CMS collection configuration
+    uploads/               # Media uploads from CMS
   src/
-    config.ts              # CMS endpoints configuration
+    content/               # Editable JSON content (managed by Decap CMS)
+      events/              # Event JSON files
+      pages/               # Page content (home, about, vendors, contact)
+      sponsors/            # Sponsor tier configuration
+      galleries/           # Photo gallery entries
+      site.json            # Global site settings
     hooks/
-      useCMS.ts            # React Query hooks for CMS data
+      useCMS.ts            # React Query hooks for content
     lib/
-      cms.ts               # CMS fetching with localStorage cache
+      content.ts           # Content imports and helpers
+      cms.ts               # External API fetching (sponsor logos)
     components/
       Layout.tsx           # Header, Footer, Navigation
       SEO.tsx              # Per-page meta tags
       ui/                  # shadcn/ui components
     pages/
       Home.tsx             # Homepage with hero, events, CTAs
-      Events.tsx           # Events index (grouped by status)
+      Events.tsx           # Events index with search
       EventDetail.tsx      # Event detail page (/events/:slug)
-      Calendar.tsx         # EventsCalendar.co embed from CMS
+      Calendar.tsx         # EventsCalendar.co embed
       Vendors.tsx          # Per-event vendor signup links
-      Sponsors.tsx         # Tiers from CMS + logo fetch
+      Sponsors.tsx         # Tiers + sponsor logos
       CarCruise.tsx        # Car Cruise hub page
       StreetMarket.tsx     # Street Market hub page
       NightMarket.tsx      # Night Market hub page
@@ -38,97 +50,85 @@ client/
     App.tsx                # Routes and providers
 
 shared/
-  types.ts                 # TypeScript interfaces for CMS data
+  types.ts                 # TypeScript interfaces
 ```
 
 ## Pages
 - **Home** (`/`) - Hero, signature events, upcoming events, CTAs
-- **Events** (`/events`) - Event cards grouped by status (Open/Upcoming/Closed)
-- **Event Detail** (`/events/:slug`) - Individual event with vendor/sponsor/register buttons
-- **Calendar** (`/calendar`) - EventsCalendar.co embed from CMS
+- **Events** (`/events`) - Event cards with search, grouped by status
+- **Event Detail** (`/events/:slug`) - Individual event details
+- **Calendar** (`/calendar`) - EventsCalendar.co embed
 - **Vendors** (`/vendors`) - Per-event vendor signup links
-- **Sponsors** (`/sponsors`) - Tier cards from CMS + sponsor logos section
+- **Sponsors** (`/sponsors`) - Tier cards + sponsor logos
 - **Car Cruise** (`/car-cruise`) - Hub page for car cruise event
 - **Street Market** (`/street-market`) - Hub page for street market
 - **Night Market** (`/night-market`) - Hub page for night market
 - **Contact** (`/contact`) - Contact form
+- **Admin** (`/admin`) - Decap CMS dashboard (requires login)
 
-## CMS Configuration
+## Decap CMS Admin Dashboard
 
-### Endpoints (in `client/src/config.ts`)
-```typescript
-CMS_BASE_URL = "<APPS_SCRIPT_WEB_APP_URL>"
-SPONSORS_LOGO_JSON_URL = "https://jotform-sponsor-fetch.replit.app/api/sponsors.json"
-```
+### Accessing the Admin
+Navigate to `/admin` to access the content management system. Non-technical editors can:
+- Add/edit/delete events
+- Update page content (home, about, vendors, contact)
+- Manage sponsor tiers and pricing
+- Create photo galleries with links
+- Update site settings
 
-### CMS Routes
-- `${CMS_BASE_URL}?route=site` - Site configuration (name, tagline, contact, calendar embed)
-- `${CMS_BASE_URL}?route=events` - Events list with status, vendor/sponsor URLs
-- `${CMS_BASE_URL}?route=sponsorTiers` - Sponsorship tiers with benefits and Square URLs
+### How It Works
+1. Editors log in via Netlify Identity
+2. Make changes in the visual editor
+3. Click "Publish" to save
+4. Changes are committed directly to GitHub
+5. GitHub Actions rebuilds and deploys the site automatically
 
-### Caching
-- All CMS responses are cached in localStorage for 10 minutes
-- React Query handles cache invalidation and refetching
+## Content Structure
 
-## Expected CMS Data Structures
-
-### Site Config
+### Events (`client/src/content/events/*.json`)
 ```json
 {
-  "site_name": "Downtown Irwin",
-  "tagline": "Your Community, Your Downtown",
-  "contact_email": "info@irwinbpa.com",
-  "contact_phone": "(412) 555-0100",
-  "address": "Main Street, Irwin, PA 15642",
-  "events_calendar_embed": "<iframe src='...'></iframe>",
-  "hero_title": "Welcome to Downtown Irwin",
-  "hero_subtitle": "..."
+  "id": "car-cruise-2026",
+  "slug": "car-cruise-2026",
+  "title": "Irwin Car Cruise 2026",
+  "date": "August 15, 2026",
+  "time": "10:00 AM - 8:00 PM",
+  "location": "Main Street, Irwin",
+  "description": "Annual car cruise event...",
+  "status": "upcoming",
+  "vendor_signup_url": "https://...",
+  "sponsor_url": "https://...",
+  "register_url": "https://...",
+  "is_car_cruise": true
 }
 ```
 
-### Events
-```json
-[
-  {
-    "id": "1",
-    "slug": "car-cruise-2026",
-    "title": "Irwin Car Cruise 2026",
-    "date": "August 15, 2026",
-    "time": "10:00 AM - 8:00 PM",
-    "location": "Main Street, Irwin",
-    "description": "Annual car cruise event...",
-    "status": "upcoming",
-    "vendor_signup_url": "https://...",
-    "sponsor_url": "https://...",
-    "register_url": "https://...",
-    "vendor_cap": 100,
-    "vendor_count": 45,
-    "is_car_cruise": true
-  }
-]
-```
-
-### Sponsor Tiers
-```json
-[
-  {
-    "id": "presenting",
-    "name": "Presenting Sponsor",
-    "price": 2500,
-    "benefits": ["Premier logo placement", "VIP tent", "..."],
-    "square_url": "https://square.link/...",
-    "order": 1
-  }
-]
-```
-
-### Sponsor Logos (from jotform endpoint)
+### Sponsor Tiers (`client/src/content/sponsors/tiers.json`)
 ```json
 {
-  "presenting": [{"name": "Sponsor A", "logo_url": "...", "website": "..."}],
-  "gold": [...],
-  "silver": [...],
-  "supporting": ["Sponsor Name 1", "Sponsor Name 2"]
+  "tiers": [
+    {
+      "id": "presenting",
+      "name": "Presenting Sponsor",
+      "price": 2500,
+      "benefits": ["Premier logo placement", "VIP tent", "..."],
+      "square_url": "https://square.link/...",
+      "order": 1
+    }
+  ]
+}
+```
+
+### Site Settings (`client/src/content/site.json`)
+```json
+{
+  "site_name": "Downtown Irwin",
+  "tagline": "The biggest little town in Pennsylvania",
+  "contact_email": "jmsmaligo@gmail.com",
+  "contact_phone": "(412) 555-0100",
+  "address": "Main Street, Irwin, PA 15642",
+  "facebook_url": "https://www.facebook.com/...",
+  "instagram_url": ""
 }
 ```
 
@@ -140,43 +140,81 @@ npm run build  # Build static site to dist/
 npm run check  # TypeScript type checking
 ```
 
-## Publishing (Wix-like)
+## Netlify Setup for Decap CMS (One-Time)
 
-Content updates via Google Sheets do NOT require redeploying. Code changes require publishing:
+### 1. Deploy to Netlify
+1. Go to [Netlify](https://app.netlify.com)
+2. Click "Add new site" → "Import an existing project"
+3. Connect your GitHub repository
+4. Build settings:
+   - **Build command**: `npm run build`
+   - **Publish directory**: `dist/public`
+5. Deploy the site
 
-### Publish Command
+### 2. Enable Netlify Identity
+1. Go to Site settings → Identity
+2. Click "Enable Identity"
+3. Under Registration, select **"Invite only"** (important for security)
+4. Under External providers, optionally enable Google/GitHub login
+
+### 3. Enable Git Gateway
+1. Go to Site settings → Identity → Services
+2. Click "Enable Git Gateway"
+3. This allows the CMS to commit to your GitHub repo
+
+### 4. Invite Editors
+1. Go to Identity tab
+2. Click "Invite users"
+3. Enter email addresses of content editors
+4. They'll receive an invitation to create an account
+
+### 5. Set Roles (Optional)
+For more granular control:
+1. Go to Site settings → Identity → Registration
+2. Set up roles if you want different permission levels
+
+### Required GitHub Permissions
+The Git Gateway needs these permissions on your repo:
+- Read and write access to code
+- Read access to metadata
+
+## Publishing Workflow
+
+### Content Updates (No Deploy Needed)
+When editors save changes in the CMS:
+1. Changes are committed to GitHub automatically
+2. GitHub Actions triggers a rebuild
+3. Site is deployed with new content
+
+### Code Changes
+For code/design changes, push to GitHub:
+```bash
+git add -A && git commit -m "Update" && git push origin main
+```
+
+Or use the publish script:
 ```bash
 bash scripts/publish.sh
 ```
 
-This runs type check, builds, commits, and pushes to GitHub. GitHub Actions then deploys to Pages automatically.
-
-### Manual Publish
-```bash
-npm run build
-cp dist/index.html dist/404.html
-git add -A && git commit -m "Publish site" && git push origin main
-```
-
-### One-Time Setup
-1. Connect Replit to GitHub via Git pane or GIT_URL secret
-2. Verify remote: `git remote -v`
-3. Enable GitHub Pages (Settings → Pages → Source: GitHub Actions)
-
-Live site: https://downtownirwin.github.io/downtown-irwin/
-
 ## Key Features
 
-- **CMS-Driven Content**: All events, sponsors, and site config from Google Sheets
+- **Wix-like Admin**: Visual CMS at `/admin` for non-technical editors
+- **No Git Knowledge Required**: Editors just click Publish
+- **Automatic Deploys**: GitHub Actions rebuilds on content changes
+- **Event Search**: Users can search events by title, description, location
+- **Back to Top**: Floating button for easy navigation
 - **Status-Based Events**: Events grouped as Open, Upcoming, or Closed
-- **Per-Event Actions**: Vendor signup, sponsor, and register buttons per event
+- **Per-Event Actions**: Vendor signup, sponsor, and register buttons
 - **Hub Pages**: Dedicated pages for Car Cruise, Street Market, Night Market
 - **Responsive Design**: Mobile-first with hamburger menu
 - **SEO**: Per-page title, description, and Open Graph tags
-- **Caching**: 10-minute localStorage cache for CMS data
 
 ## Styling
 - Clean, civic/professional design
 - Blue primary color (#2b5a8a)
 - Mobile-first responsive layout
 - shadcn/ui component library
+
+## Live Site
+GitHub Pages: https://downtownirwin.github.io/downtown-irwin/

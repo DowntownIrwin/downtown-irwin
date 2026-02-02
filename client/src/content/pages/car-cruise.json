@@ -1,0 +1,35 @@
+{
+  "title": "Irwin Car Cruise",
+  "slug": "car-cruise",
+  "navLabel": "Car Cruise",
+  "showInNav": true,
+  "navOrder": 4,
+  "template": "eventHub",
+  "sections": [
+    {
+      "type": "hero",
+      "headline": "Irwin Car Cruise",
+      "subheadline": "The biggest car show in Western Pennsylvania",
+      "buttons": [
+        {
+          "text": "Register Now",
+          "url": "#register",
+          "style": "primary"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "heading": "About the Car Cruise",
+      "body": "The Irwin Car Cruise is one of the largest car shows in Western Pennsylvania. Join us for a day of classic cars, live music, food vendors, and family fun in downtown Irwin.",
+      "alignment": "left"
+    },
+    {
+      "type": "eventsList",
+      "heading": "Car Cruise Events",
+      "filterType": "car-cruise",
+      "featuredOnly": false,
+      "maxEvents": 10
+    }
+  ]
+}

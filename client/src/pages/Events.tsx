@@ -6,8 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Calendar, MapPin, Clock, Loader2, Users, ExternalLink, Ticket, Search } from "lucide-react";
 import { Link } from "wouter";
 import { useEvents } from "@/hooks/useCMS";
-import { groupEventsByStatus } from "@/lib/cms";
-import type { CMSEvent } from "@shared/types";
+import { groupEventsByStatus, type CMSEvent } from "@/lib/content";
 import { SEO } from "@/components/SEO";
 
 function EventCard({ event }: { event: CMSEvent }) {
@@ -23,12 +22,18 @@ function EventCard({ event }: { event: CMSEvent }) {
     closed: "Closed",
   };
 
+  const displayDate = new Date(event.startDate).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
   return (
     <Card className="hover-elevate overflow-hidden" data-testid={`card-event-${event.slug}`}>
-      {event.image_url && (
+      {event.heroImage && (
         <div className="aspect-video bg-muted overflow-hidden">
           <img 
-            src={event.image_url} 
+            src={event.heroImage} 
             alt={event.title}
             className="w-full h-full object-cover"
           />
@@ -39,6 +44,7 @@ function EventCard({ event }: { event: CMSEvent }) {
           <Badge className={statusColors[event.status]}>
             {statusLabels[event.status]}
           </Badge>
+          {event.featured && <Badge variant="outline">Featured</Badge>}
         </div>
         
         <Link href={`/events/${event.slug}`}>
@@ -54,12 +60,12 @@ function EventCard({ event }: { event: CMSEvent }) {
         <div className="space-y-2 text-sm text-muted-foreground mb-4">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 shrink-0" />
-            <span>{event.date}</span>
+            <span>{displayDate}</span>
           </div>
-          {event.time && (
+          {event.timeText && (
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 shrink-0" />
-              <span>{event.time}</span>
+              <span>{event.timeText}</span>
             </div>
           )}
           {event.location && (
@@ -71,24 +77,24 @@ function EventCard({ event }: { event: CMSEvent }) {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {event.vendor_signup_url && (
-            <a href={event.vendor_signup_url} target="_blank" rel="noopener noreferrer">
+          {event.vendorUrl && (
+            <a href={event.vendorUrl} target="_blank" rel="noopener noreferrer">
               <Button size="sm" variant="outline" data-testid={`button-vendor-${event.slug}`}>
                 <Users className="h-4 w-4 mr-1" />
                 Vendor Signup
               </Button>
             </a>
           )}
-          {event.sponsor_url && (
-            <a href={event.sponsor_url} target="_blank" rel="noopener noreferrer">
+          {event.sponsorUrl && (
+            <a href={event.sponsorUrl} target="_blank" rel="noopener noreferrer">
               <Button size="sm" variant="outline" data-testid={`button-sponsor-${event.slug}`}>
                 <ExternalLink className="h-4 w-4 mr-1" />
                 Sponsor
               </Button>
             </a>
           )}
-          {event.register_url && (
-            <a href={event.register_url} target="_blank" rel="noopener noreferrer">
+          {event.attendeeUrl && (
+            <a href={event.attendeeUrl} target="_blank" rel="noopener noreferrer">
               <Button size="sm" data-testid={`button-register-${event.slug}`}>
                 <Ticket className="h-4 w-4 mr-1" />
                 Register
@@ -101,10 +107,9 @@ function EventCard({ event }: { event: CMSEvent }) {
   );
 }
 
-function EventSection({ title, events, emptyMessage }: { 
+function EventSection({ title, events }: { 
   title: string; 
   events: CMSEvent[]; 
-  emptyMessage: string;
 }) {
   if (events.length === 0) return null;
 
@@ -113,7 +118,7 @@ function EventSection({ title, events, emptyMessage }: {
       <h2 className="text-2xl font-bold mb-6">{title}</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {events.map((event) => (
-          <EventCard key={event.id} event={event} />
+          <EventCard key={event.slug} event={event} />
         ))}
       </div>
     </section>
@@ -133,11 +138,16 @@ export default function Events() {
       event.title.toLowerCase().includes(query) ||
       event.description?.toLowerCase().includes(query) ||
       event.location?.toLowerCase().includes(query) ||
-      event.date?.toLowerCase().includes(query)
+      event.startDate?.toLowerCase().includes(query)
     );
   }, [events, searchQuery]);
   
-  const grouped = groupEventsByStatus(filteredEvents);
+  const grouped = groupEventsByStatus();
+  const filteredGrouped = {
+    open: filteredEvents.filter(e => e.status === "open"),
+    upcoming: filteredEvents.filter(e => e.status === "upcoming"),
+    closed: filteredEvents.filter(e => e.status === "closed"),
+  };
   const hasEvents = events && events.length > 0;
   const hasResults = filteredEvents.length > 0;
 
@@ -197,18 +207,15 @@ export default function Events() {
           <>
             <EventSection 
               title="Open for Registration" 
-              events={grouped.open}
-              emptyMessage="No events currently open"
+              events={filteredGrouped.open}
             />
             <EventSection 
               title="Upcoming Events" 
-              events={grouped.upcoming}
-              emptyMessage="No upcoming events"
+              events={filteredGrouped.upcoming}
             />
             <EventSection 
               title="Past Events" 
-              events={grouped.closed}
-              emptyMessage="No past events"
+              events={filteredGrouped.closed}
             />
           </>
         )}

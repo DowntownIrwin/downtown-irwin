@@ -3,19 +3,24 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, ShoppingBag, Users, Utensils, Music, Loader2, ExternalLink, Ticket } from "lucide-react";
 import { Link } from "wouter";
-import { useEvents } from "@/hooks/useCMS";
-import { findStreetMarketEvent } from "@/lib/cms";
+import { useEventsByType } from "@/hooks/useCMS";
 import { SEO } from "@/components/SEO";
 
 export default function StreetMarket() {
-  const { data: events, isLoading } = useEvents();
-  const event = events ? findStreetMarketEvent(events) : undefined;
+  const { data: streetMarketEvents, isLoading } = useEventsByType("street-market");
+  const event = streetMarketEvents?.[0];
 
   const statusLabels = {
     open: "Open for Vendors",
     upcoming: "Coming Soon",
     closed: "Event Ended",
   };
+
+  const displayDate = event ? new Date(event.startDate).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }) : null;
 
   return (
     <div>
@@ -43,7 +48,7 @@ export default function StreetMarket() {
               <div className="flex flex-wrap gap-6 text-sm">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-5 w-5" />
-                  <span>{event.date}</span>
+                  <span>{displayDate}</span>
                 </div>
                 {event.location && (
                   <div className="flex items-center gap-2">
@@ -128,24 +133,24 @@ export default function StreetMarket() {
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-3">
-                    {event.vendor_signup_url && (
-                      <a href={event.vendor_signup_url} target="_blank" rel="noopener noreferrer">
+                    {event.vendorUrl && (
+                      <a href={event.vendorUrl} target="_blank" rel="noopener noreferrer">
                         <Button variant="outline" data-testid="button-vendor-signup">
                           <Users className="h-4 w-4 mr-2" />
                           Become a Vendor
                         </Button>
                       </a>
                     )}
-                    {event.sponsor_url && (
-                      <a href={event.sponsor_url} target="_blank" rel="noopener noreferrer">
+                    {event.sponsorUrl && (
+                      <a href={event.sponsorUrl} target="_blank" rel="noopener noreferrer">
                         <Button variant="outline" data-testid="button-sponsor">
                           <ExternalLink className="h-4 w-4 mr-2" />
                           Sponsor
                         </Button>
                       </a>
                     )}
-                    {event.register_url && (
-                      <a href={event.register_url} target="_blank" rel="noopener noreferrer">
+                    {event.attendeeUrl && (
+                      <a href={event.attendeeUrl} target="_blank" rel="noopener noreferrer">
                         <Button data-testid="button-register">
                           <Ticket className="h-4 w-4 mr-2" />
                           Register

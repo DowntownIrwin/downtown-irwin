@@ -197,6 +197,13 @@ export function Footer() {
 
         <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} Downtown Irwin / IBPA. All rights reserved.</p>
+          <a 
+            href="/admin" 
+            className="text-xs text-muted-foreground/50 hover:text-muted-foreground mt-2 inline-block"
+            data-testid="link-admin"
+          >
+            Admin
+          </a>
         </div>
       </div>
     </footer>

@@ -1,0 +1,53 @@
+{
+  "title": "Home",
+  "slug": "home",
+  "navLabel": "Home",
+  "showInNav": true,
+  "navOrder": 1,
+  "template": "landing",
+  "sections": [
+    {
+      "type": "hero",
+      "headline": "Welcome to Downtown Irwin",
+      "subheadline": "The biggest little town in Pennsylvania",
+      "buttons": [
+        {
+          "text": "View Events",
+          "url": "/events",
+          "style": "primary"
+        },
+        {
+          "text": "Become a Sponsor",
+          "url": "/sponsors",
+          "style": "outline"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "heading": "The Irwin Business & Professional Association (IBPA)",
+      "body": "The IBPA is an all volunteer group that promotes the health & vitality of Irwin for the benefit of the surrounding communities.",
+      "alignment": "center"
+    },
+    {
+      "type": "eventsList",
+      "heading": "Upcoming Events",
+      "filterType": "all",
+      "featuredOnly": false,
+      "maxEvents": 3
+    },
+    {
+      "type": "cta",
+      "heading": "Get Involved",
+      "description": "Join us at a meeting! All are welcome. Meetings are held every Thursday from 8:00 - 9:00 a.m. in downtown Irwin.",
+      "backgroundColor": "primary",
+      "buttons": [
+        {
+          "text": "Contact Us",
+          "url": "/contact",
+          "style": "secondary"
+        }
+      ]
+    }
+  ]
+}

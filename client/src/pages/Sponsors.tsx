@@ -1,9 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Crown, Award, Medal, Heart, ExternalLink, CheckCircle, Loader2 } from "lucide-react";
 import { useSponsorTiers, useSponsorLogos } from "@/hooks/useCMS";
-import type { SponsorTier, SponsorLogosData } from "@shared/types";
+import { type SponsorTier } from "@/lib/content";
+import type { SponsorLogosData } from "@shared/types";
 import { SEO } from "@/components/SEO";
 
 const tierIcons: Record<string, typeof Crown> = {
@@ -45,7 +45,7 @@ function SponsorTierCard({ tier }: { tier: SponsorTier }) {
             </li>
           ))}
         </ul>
-        <a href={tier.square_url} target="_blank" rel="noopener noreferrer" className="block">
+        <a href={tier.squareUrl} target="_blank" rel="noopener noreferrer" className="block">
           <Button className="w-full" data-testid={`button-sponsor-${tier.id}`}>
             Sponsor Now
             <ExternalLink className="ml-2 h-4 w-4" />
@@ -182,7 +182,7 @@ export default function Sponsors() {
         "10 event passes",
         "Speaking opportunity",
       ],
-      square_url: "#",
+      squareUrl: "#",
       order: 1,
     },
     {
@@ -196,7 +196,7 @@ export default function Sponsors() {
         "Premium vendor booth",
         "6 event passes",
       ],
-      square_url: "#",
+      squareUrl: "#",
       order: 2,
     },
     {
@@ -209,7 +209,7 @@ export default function Sponsors() {
         "Standard vendor booth",
         "4 event passes",
       ],
-      square_url: "#",
+      squareUrl: "#",
       order: 3,
     },
     {
@@ -221,7 +221,7 @@ export default function Sponsors() {
         "Listed on website",
         "2 event passes",
       ],
-      square_url: "#",
+      squareUrl: "#",
       order: 4,
     },
   ];

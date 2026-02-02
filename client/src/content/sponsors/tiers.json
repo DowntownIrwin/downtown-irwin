@@ -1,0 +1,55 @@
+{
+  "tiers": [
+    {
+      "id": "presenting",
+      "name": "Presenting Sponsor",
+      "price": 2500,
+      "benefits": [
+        "Premier logo placement on all event materials",
+        "VIP tent at events",
+        "Exclusive social media features",
+        "Recognition from stage at all events",
+        "Banner placement at prime locations"
+      ],
+      "squareUrl": "https://square.link/presenting-sponsor",
+      "order": 1
+    },
+    {
+      "id": "gold",
+      "name": "Gold Sponsor",
+      "price": 1000,
+      "benefits": [
+        "Logo on event signage",
+        "Social media recognition",
+        "Recognition from stage",
+        "Banner placement"
+      ],
+      "squareUrl": "https://square.link/gold-sponsor",
+      "order": 2
+    },
+    {
+      "id": "silver",
+      "name": "Silver Sponsor",
+      "price": 500,
+      "benefits": [
+        "Logo on event signage",
+        "Social media recognition",
+        "Website listing"
+      ],
+      "squareUrl": "https://square.link/silver-sponsor",
+      "order": 3
+    },
+    {
+      "id": "supporting",
+      "name": "Supporting Sponsor",
+      "price": 250,
+      "benefits": [
+        "Name listing on signage",
+        "Website listing",
+        "Social media mention"
+      ],
+      "squareUrl": "https://square.link/supporting-sponsor",
+      "order": 4
+    }
+  ]
+}

@@ -1,0 +1,229 @@
+backend:
+  name: git-gateway
+  branch: main
+
+media_folder: "client/public/uploads"
+public_folder: "/uploads"
+
+collections:
+  - name: "events"
+    label: "Events"
+    folder: "client/src/content/events"
+    create: true
+    slug: "{{slug}}"
+    extension: "json"
+    format: "json"
+    sortable_fields: ["startDate", "title"]
+    fields:
+      - { label: "Slug", name: "slug", widget: "string", required: true, pattern: ['^[a-z0-9-]+$', "Lowercase letters, numbers, and hyphens only"] }
+      - { label: "Title", name: "title", widget: "string", required: true }
+      - { label: "Start Date", name: "startDate", widget: "datetime", required: true, date_format: "MMMM D, YYYY", time_format: false }
+      - { label: "End Date", name: "endDate", widget: "datetime", required: false, date_format: "MMMM D, YYYY", time_format: false }
+      - { label: "Time Text", name: "timeText", widget: "string", required: false, hint: "e.g., 10:00 AM - 8:00 PM" }
+      - { label: "Location", name: "location", widget: "string", required: false }
+      - { label: "Description", name: "description", widget: "markdown", required: true }
+      - label: "Status"
+        name: "status"
+        widget: "select"
+        options:
+          - { label: "Open for Registration", value: "open" }
+          - { label: "Upcoming", value: "upcoming" }
+          - { label: "Closed/Past", value: "closed" }
+        default: "upcoming"
+      - { label: "Vendor/Attendee Cap", name: "cap", widget: "number", required: false, value_type: "int", hint: "Maximum number of vendors or attendees" }
+      - { label: "Vendor Signup URL", name: "vendorUrl", widget: "string", required: false }
+      - { label: "Sponsor URL", name: "sponsorUrl", widget: "string", required: false }
+      - { label: "Attendee/Register URL", name: "attendeeUrl", widget: "string", required: false }
+      - { label: "Hero Image", name: "heroImage", widget: "image", required: false }
+      - { label: "Gallery Slug", name: "gallerySlug", widget: "relation", collection: "galleries", value_field: "slug", search_fields: ["title", "slug"], display_fields: ["title"], required: false }
+      - { label: "Featured Event", name: "featured", widget: "boolean", default: false }
+      - label: "Event Type"
+        name: "eventType"
+        widget: "select"
+        options:
+          - { label: "Car Cruise", value: "car-cruise" }
+          - { label: "Street Market", value: "street-market" }
+          - { label: "Night Market", value: "night-market" }
+          - { label: "Other", value: "other" }
+        default: "other"
+
+  - name: "pages"
+    label: "Pages"
+    folder: "client/src/content/pages"
+    create: true
+    slug: "{{slug}}"
+    extension: "json"
+    format: "json"
+    fields:
+      - { label: "Title", name: "title", widget: "string", required: true }
+      - { label: "Slug", name: "slug", widget: "string", required: true, pattern: ['^[a-z0-9-]+$', "Lowercase letters, numbers, and hyphens only"], hint: "URL path (e.g., 'about' for /about)" }
+      - { label: "Navigation Label", name: "navLabel", widget: "string", required: false, hint: "Text shown in navigation menu (defaults to title)" }
+      - { label: "Show in Navigation", name: "showInNav", widget: "boolean", default: true }
+      - { label: "Navigation Order", name: "navOrder", widget: "number", required: false, value_type: "int", default: 100 }
+      - label: "Template"
+        name: "template"
+        widget: "select"
+        options:
+          - { label: "Landing Page", value: "landing" }
+          - { label: "Basic Page", value: "basic" }
+          - { label: "Gallery Page", value: "gallery" }
+          - { label: "Event Hub", value: "eventHub" }
+        default: "basic"
+      - name: "sections"
+        label: "Page Sections"
+        widget: "list"
+        types:
+          - name: "hero"
+            label: "Hero Section"
+            widget: "object"
+            fields:
+              - { label: "Headline", name: "headline", widget: "string", required: true }
+              - { label: "Subheadline", name: "subheadline", widget: "string", required: false }
+              - { label: "Background Image", name: "backgroundImage", widget: "image", required: false }
+              - name: "buttons"
+                label: "Buttons"
+                widget: "list"
+                required: false
+                fields:
+                  - { label: "Text", name: "text", widget: "string" }
+                  - { label: "URL", name: "url", widget: "string" }
+                  - { label: "Style", name: "style", widget: "select", options: ["primary", "secondary", "outline"], default: "primary" }
+          - name: "text"
+            label: "Text Block"
+            widget: "object"
+            fields:
+              - { label: "Heading", name: "heading", widget: "string", required: false }
+              - { label: "Body", name: "body", widget: "markdown", required: true }
+              - { label: "Alignment", name: "alignment", widget: "select", options: ["left", "center", "right"], default: "left" }
+          - name: "photoGrid"
+            label: "Photo Grid"
+            widget: "object"
+            fields:
+              - { label: "Heading", name: "heading", widget: "string", required: false }
+              - { label: "Columns", name: "columns", widget: "select", options: ["2", "3", "4"], default: "3" }
+              - name: "images"
+                label: "Images"
+                widget: "list"
+                fields:
+                  - { label: "Image", name: "image", widget: "image" }
+                  - { label: "Caption", name: "caption", widget: "string", required: false }
+                  - { label: "Link URL", name: "linkUrl", widget: "string", required: false }
+          - name: "cta"
+            label: "Call to Action"
+            widget: "object"
+            fields:
+              - { label: "Heading", name: "heading", widget: "string", required: true }
+              - { label: "Description", name: "description", widget: "text", required: false }
+              - { label: "Background Color", name: "backgroundColor", widget: "select", options: ["default", "primary", "accent", "muted"], default: "primary" }
+              - name: "buttons"
+                label: "Buttons"
+                widget: "list"
+                fields:
+                  - { label: "Text", name: "text", widget: "string" }
+                  - { label: "URL", name: "url", widget: "string" }
+                  - { label: "Style", name: "style", widget: "select", options: ["primary", "secondary", "outline"], default: "primary" }
+          - name: "faq"
+            label: "FAQ Section"
+            widget: "object"
+            fields:
+              - { label: "Heading", name: "heading", widget: "string", default: "Frequently Asked Questions" }
+              - name: "items"
+                label: "FAQ Items"
+                widget: "list"
+                fields:
+                  - { label: "Question", name: "question", widget: "string" }
+                  - { label: "Answer", name: "answer", widget: "markdown" }
+          - name: "embed"
+            label: "Embed (iframe/code)"
+            widget: "object"
+            fields:
+              - { label: "Heading", name: "heading", widget: "string", required: false }
+              - { label: "Embed HTML", name: "embedHtml", widget: "text", required: true, hint: "Paste iframe or embed code here" }
+              - { label: "Max Width", name: "maxWidth", widget: "select", options: ["full", "large", "medium", "small"], default: "large" }
+          - name: "sponsors"
+            label: "Sponsors Display"
+            widget: "object"
+            fields:
+              - { label: "Heading", name: "heading", widget: "string", default: "Our Sponsors" }
+              - { label: "Show Tier Cards", name: "showTierCards", widget: "boolean", default: true }
+              - { label: "Show Logos", name: "showLogos", widget: "boolean", default: true }
+          - name: "eventsList"
+            label: "Events List"
+            widget: "object"
+            fields:
+              - { label: "Heading", name: "heading", widget: "string", default: "Upcoming Events" }
+              - { label: "Filter by Type", name: "filterType", widget: "select", options: ["all", "car-cruise", "street-market", "night-market"], default: "all" }
+              - { label: "Show Only Featured", name: "featuredOnly", widget: "boolean", default: false }
+              - { label: "Max Events", name: "maxEvents", widget: "number", value_type: "int", default: 6 }
+          - name: "galleriesList"
+            label: "Galleries List"
+            widget: "object"
+            fields:
+              - { label: "Heading", name: "heading", widget: "string", default: "Photo Galleries" }
+              - { label: "Show Only Featured", name: "featuredOnly", widget: "boolean", default: false }
+              - { label: "Max Galleries", name: "maxGalleries", widget: "number", value_type: "int", default: 6 }
+
+  - name: "galleries"
+    label: "Photo Galleries"
+    folder: "client/src/content/galleries"
+    create: true
+    slug: "{{slug}}"
+    extension: "json"
+    format: "json"
+    fields:
+      - { label: "Slug", name: "slug", widget: "string", required: true, pattern: ['^[a-z0-9-]+$', "Lowercase letters, numbers, and hyphens only"] }
+      - { label: "Title", name: "title", widget: "string", required: true }
+      - { label: "Description", name: "description", widget: "text", required: false }
+      - label: "Source Type"
+        name: "sourceType"
+        widget: "select"
+        options:
+          - { label: "Uploaded Photos", value: "uploaded" }
+          - { label: "Google Drive Album", value: "drive" }
+          - { label: "Facebook Album", value: "facebook" }
+        default: "uploaded"
+      - { label: "External Source URL", name: "sourceUrl", widget: "string", required: false, hint: "URL to Google Drive or Facebook album (if using external source)" }
+      - { label: "Featured Gallery", name: "featured", widget: "boolean", default: false }
+      - { label: "Cover Image", name: "coverImage", widget: "image", required: false }
+      - name: "photos"
+        label: "Photos"
+        widget: "list"
+        required: false
+        fields:
+          - { label: "Image", name: "image", widget: "image" }
+          - { label: "Caption", name: "caption", widget: "string", required: false }
+
+  - name: "site"
+    label: "Site Settings"
+    files:
+      - name: "settings"
+        label: "Site Settings"
+        file: "client/src/content/site.json"
+        fields:
+          - { label: "Site Name", name: "siteName", widget: "string" }
+          - { label: "Tagline", name: "tagline", widget: "string" }
+          - { label: "Contact Email", name: "contactEmail", widget: "string" }
+          - { label: "Contact Phone", name: "contactPhone", widget: "string" }
+          - { label: "Address", name: "address", widget: "string" }
+          - { label: "Facebook URL", name: "facebookUrl", widget: "string", required: false }
+          - { label: "Instagram URL", name: "instagramUrl", widget: "string", required: false }
+          - { label: "Logo", name: "logo", widget: "image", required: false }
+          - { label: "Favicon", name: "favicon", widget: "image", required: false }
+
+  - name: "sponsorTiers"
+    label: "Sponsor Tiers"
+    files:
+      - name: "tiers"
+        label: "Sponsorship Tiers"
+        file: "client/src/content/sponsors/tiers.json"
+        fields:
+          - name: "tiers"
+            label: "Tiers"
+            widget: "list"
+            fields:
+              - { label: "ID", name: "id", widget: "string" }
+              - { label: "Name", name: "name", widget: "string" }
+              - { label: "Price", name: "price", widget: "number", value_type: "int" }
+              - { label: "Benefits", name: "benefits", widget: "list", field: { label: "Benefit", name: "benefit", widget: "string" } }
+              - { label: "Square Payment URL", name: "squareUrl", widget: "string" }
+              - { label: "Display Order", name: "order", widget: "number", value_type: "int" }

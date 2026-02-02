@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Users, Car, MapPin, ArrowRight, ShoppingBag, Moon } from "lucide-react";
 import { useEvents } from "@/hooks/useCMS";
-import { groupEventsByStatus } from "@/lib/cms";
+import { groupEventsByStatus, type CMSEvent } from "@/lib/content";
 import { SEO } from "@/components/SEO";
 import ibpaLogo from "@assets/IBPA_Logo_v3_1770042401362.png";
 import heroBackground from "@assets/72dpi_Photo_Oct_19_2024,_5_56_10_AM_Downsized_edited_1770042251001.jpg";
@@ -143,16 +143,24 @@ function AboutSection() {
 
 function UpcomingEventsSection() {
   const { data: events } = useEvents();
-  const grouped = events ? groupEventsByStatus(events) : { open: [], upcoming: [], closed: [] };
+  const grouped = groupEventsByStatus();
   
   const upcomingEvents = [...grouped.open, ...grouped.upcoming].slice(0, 3);
 
   if (upcomingEvents.length === 0) return null;
 
+  const formatDate = (event: CMSEvent) => {
+    return new Date(event.startDate).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
   return (
     <section className="py-16 bg-card">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between gap-4 flex-wrap mb-8">
           <h2 className="text-2xl md:text-3xl font-bold">Upcoming Events</h2>
           <Link href="/events">
             <Button variant="ghost" data-testid="button-view-all-events">
@@ -164,15 +172,16 @@ function UpcomingEventsSection() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {upcomingEvents.map((event) => (
-            <Link key={event.id} href={`/events/${event.slug}`}>
+            <Link key={event.slug} href={`/events/${event.slug}`}>
               <Card className="hover-elevate cursor-pointer h-full" data-testid={`card-event-${event.slug}`}>
                 <CardContent className="p-6">
                   <div className="flex items-center gap-2 mb-3">
                     <Badge variant={event.status === "open" ? "default" : "secondary"}>
                       {event.status === "open" ? "Open" : "Upcoming"}
                     </Badge>
+                    {event.featured && <Badge variant="outline">Featured</Badge>}
                   </div>
-                  <div className="text-sm text-primary font-medium mb-2">{event.date}</div>
+                  <div className="text-sm text-primary font-medium mb-2">{formatDate(event)}</div>
                   <h3 className="font-semibold text-lg mb-2">{event.title}</h3>
                   <p className="text-sm text-muted-foreground line-clamp-2">{event.description}</p>
                 </CardContent>

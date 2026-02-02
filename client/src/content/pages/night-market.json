@@ -1,0 +1,35 @@
+{
+  "title": "Night Market",
+  "slug": "night-market",
+  "navLabel": "Night Market",
+  "showInNav": true,
+  "navOrder": 6,
+  "template": "eventHub",
+  "sections": [
+    {
+      "type": "hero",
+      "headline": "Irwin Night Market",
+      "subheadline": "Experience downtown Irwin after dark",
+      "buttons": [
+        {
+          "text": "Become a Vendor",
+          "url": "#vendor",
+          "style": "primary"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "heading": "About the Night Market",
+      "body": "Experience the magic of downtown Irwin after dark with our Night Market featuring local vendors, live entertainment, and delicious food under the stars.",
+      "alignment": "left"
+    },
+    {
+      "type": "eventsList",
+      "heading": "Night Market Events",
+      "filterType": "night-market",
+      "featuredOnly": false,
+      "maxEvents": 10
+    }
+  ]
+}

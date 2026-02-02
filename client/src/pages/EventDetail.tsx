@@ -2,16 +2,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, Clock, Loader2, Users, ExternalLink, Ticket, ArrowLeft, Info } from "lucide-react";
-import { Link, useParams } from "wouter";
-import { useEvents } from "@/hooks/useCMS";
-import { findEventBySlug } from "@/lib/cms";
+import { Link, useRoute } from "wouter";
+import { useEvent } from "@/hooks/useCMS";
 import { SEO } from "@/components/SEO";
 
 export default function EventDetail() {
-  const params = useParams<{ slug: string }>();
-  const { data: events, isLoading } = useEvents();
-  
-  const event = events ? findEventBySlug(events, params.slug || "") : undefined;
+  const [, params] = useRoute("/events/:slug");
+  const slug = params?.slug || "";
+  const { data: event, isLoading } = useEvent(slug);
 
   const statusColors = {
     open: "bg-green-500",
@@ -52,6 +50,13 @@ export default function EventDetail() {
     );
   }
 
+  const displayDate = new Date(event.startDate).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
   return (
     <div className="py-12 md:py-16">
       <SEO 
@@ -69,10 +74,10 @@ export default function EventDetail() {
 
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            {event.image_url && (
+            {event.heroImage && (
               <div className="aspect-video bg-muted rounded-lg overflow-hidden mb-6">
                 <img 
-                  src={event.image_url} 
+                  src={event.heroImage} 
                   alt={event.title}
                   className="w-full h-full object-cover"
                 />
@@ -83,6 +88,7 @@ export default function EventDetail() {
               <Badge className={statusColors[event.status]}>
                 {statusLabels[event.status]}
               </Badge>
+              {event.featured && <Badge variant="outline">Featured</Badge>}
             </div>
 
             <h1 className="text-3xl md:text-4xl font-bold mb-4">{event.title}</h1>
@@ -102,18 +108,18 @@ export default function EventDetail() {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Date</p>
-                      <p className="font-medium">{event.date}</p>
+                      <p className="font-medium">{displayDate}</p>
                     </div>
                   </div>
 
-                  {event.time && (
+                  {event.timeText && (
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                         <Clock className="h-5 w-5 text-primary" />
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Time</p>
-                        <p className="font-medium">{event.time}</p>
+                        <p className="font-medium">{event.timeText}</p>
                       </div>
                     </div>
                   )}
@@ -130,24 +136,22 @@ export default function EventDetail() {
                     </div>
                   )}
 
-                  {event.vendor_cap !== undefined && (
+                  {event.cap && (
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                         <Info className="h-5 w-5 text-primary" />
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">Vendor Capacity</p>
-                        <p className="font-medium">
-                          {event.vendor_count || 0} / {event.vendor_cap} spots filled
-                        </p>
+                        <p className="text-sm text-muted-foreground">Capacity</p>
+                        <p className="font-medium">{event.cap} spots</p>
                       </div>
                     </div>
                   )}
                 </div>
 
                 <div className="space-y-3 pt-4 border-t">
-                  {event.vendor_signup_url && (
-                    <a href={event.vendor_signup_url} target="_blank" rel="noopener noreferrer" className="block">
+                  {event.vendorUrl && (
+                    <a href={event.vendorUrl} target="_blank" rel="noopener noreferrer" className="block">
                       <Button className="w-full" variant="outline" data-testid="button-vendor-signup">
                         <Users className="h-4 w-4 mr-2" />
                         Vendor Signup
@@ -155,8 +159,8 @@ export default function EventDetail() {
                     </a>
                   )}
                   
-                  {event.sponsor_url && (
-                    <a href={event.sponsor_url} target="_blank" rel="noopener noreferrer" className="block">
+                  {event.sponsorUrl && (
+                    <a href={event.sponsorUrl} target="_blank" rel="noopener noreferrer" className="block">
                       <Button className="w-full" variant="outline" data-testid="button-sponsor-event">
                         <ExternalLink className="h-4 w-4 mr-2" />
                         Sponsor This Event
@@ -164,8 +168,8 @@ export default function EventDetail() {
                     </a>
                   )}
                   
-                  {event.register_url && (
-                    <a href={event.register_url} target="_blank" rel="noopener noreferrer" className="block">
+                  {event.attendeeUrl && (
+                    <a href={event.attendeeUrl} target="_blank" rel="noopener noreferrer" className="block">
                       <Button className="w-full" data-testid="button-register-event">
                         <Ticket className="h-4 w-4 mr-2" />
                         Attend / Register

@@ -1,0 +1,22 @@
+{
+  "title": "Become a Sponsor",
+  "slug": "sponsors",
+  "navLabel": "Sponsors",
+  "showInNav": true,
+  "navOrder": 8,
+  "template": "basic",
+  "sections": [
+    {
+      "type": "text",
+      "heading": "Sponsor Our Community Events",
+      "body": "Support the IBPA and Downtown Irwin by becoming an event sponsor. Your sponsorship helps fund free community events and promotes your business to thousands of attendees.",
+      "alignment": "center"
+    },
+    {
+      "type": "sponsors",
+      "heading": "Sponsorship Levels",
+      "showTierCards": true,
+      "showLogos": true
+    }
+  ]
+}

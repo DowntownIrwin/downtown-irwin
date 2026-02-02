@@ -1,0 +1,29 @@
+{
+  "title": "About the IBPA",
+  "slug": "about",
+  "navLabel": "About",
+  "showInNav": true,
+  "navOrder": 2,
+  "template": "basic",
+  "sections": [
+    {
+      "type": "text",
+      "heading": "About the Irwin Business & Professional Association",
+      "body": "The Irwin Business & Professional Association (IBPA) is an all-volunteer group that promotes the health & vitality of Irwin for the benefit of the surrounding communities.\n\nAnnually, the IBPA organizes 15+ free community events. These events are open to everyone, not just Irwin residents. The IBPA receives no government funding. All of the events are paid for by sponsorships, business participation fees, and vendor fees. The volunteers are very appreciative of the support they receive from the local businesses and community members.\n\nAre you interested in what the IBPA is doing? Do you want to get more involved in the community? If so, then join us at a meeting; all are welcome!",
+      "alignment": "left"
+    },
+    {
+      "type": "cta",
+      "heading": "Join Us at a Meeting",
+      "description": "Meetings are held every Thursday from 8:00 - 9:00 a.m. in downtown Irwin. If you are new to our group and plan on attending a meeting, please reach out for more information.",
+      "backgroundColor": "accent",
+      "buttons": [
+        {
+          "text": "Contact Us",
+          "url": "/contact",
+          "style": "primary"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "title": "Street Market",
+  "slug": "street-market",
+  "navLabel": "Street Market",
+  "showInNav": true,
+  "navOrder": 5,
+  "template": "eventHub",
+  "sections": [
+    {
+      "type": "hero",
+      "headline": "Irwin Street Market",
+      "subheadline": "Local vendors, crafts, and community",
+      "buttons": [
+        {
+          "text": "Become a Vendor",
+          "url": "#vendor",
+          "style": "primary"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "heading": "About the Street Market",
+      "body": "Join us for our Street Market featuring local vendors, crafts, food, and community fun. Support local businesses and artisans in beautiful downtown Irwin.",
+      "alignment": "left"
+    },
+    {
+      "type": "eventsList",
+      "heading": "Street Market Events",
+      "filterType": "street-market",
+      "featuredOnly": false,
+      "maxEvents": 10
+    }
+  ]
+}

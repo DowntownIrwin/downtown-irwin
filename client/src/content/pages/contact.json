@@ -1,0 +1,22 @@
+{
+  "title": "Contact Us",
+  "slug": "contact",
+  "navLabel": "Contact",
+  "showInNav": true,
+  "navOrder": 10,
+  "template": "basic",
+  "sections": [
+    {
+      "type": "text",
+      "heading": "Contact Us",
+      "body": "Have questions about our events or want to get involved? We'd love to hear from you!",
+      "alignment": "center"
+    },
+    {
+      "type": "text",
+      "heading": "Get in Touch",
+      "body": "**Email:** jmsmaligo@gmail.com\n\n**Address:** Main Street, Irwin, PA 15642\n\n**Meetings:** Every Thursday from 8:00 - 9:00 a.m. in downtown Irwin",
+      "alignment": "left"
+    }
+  ]
+}

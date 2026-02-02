@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Store, FileText, CheckCircle, ExternalLink, Users, Loader2, Calendar } from "lucide-react";
 import { Link } from "wouter";
 import { useEvents } from "@/hooks/useCMS";
-import type { CMSEvent } from "@shared/types";
+import { type CMSEvent } from "@/lib/content";
 import { SEO } from "@/components/SEO";
 
 function EventVendorCard({ event }: { event: CMSEvent }) {
@@ -20,6 +20,12 @@ function EventVendorCard({ event }: { event: CMSEvent }) {
     closed: "Closed",
   };
 
+  const displayDate = new Date(event.startDate).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
   return (
     <Card className="hover-elevate" data-testid={`card-vendor-event-${event.slug}`}>
       <CardContent className="p-6">
@@ -28,7 +34,7 @@ function EventVendorCard({ event }: { event: CMSEvent }) {
             <h3 className="font-semibold text-lg">{event.title}</h3>
             <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
               <Calendar className="h-4 w-4" />
-              <span>{event.date}</span>
+              <span>{displayDate}</span>
             </div>
           </div>
           <Badge className={statusColors[event.status]}>
@@ -36,14 +42,14 @@ function EventVendorCard({ event }: { event: CMSEvent }) {
           </Badge>
         </div>
         
-        {event.vendor_cap !== undefined && (
+        {event.cap && (
           <div className="text-sm text-muted-foreground mb-4">
-            <span className="font-medium">{event.vendor_count || 0}</span> / {event.vendor_cap} vendor spots filled
+            <span className="font-medium">{event.cap}</span> vendor spots available
           </div>
         )}
 
-        {event.vendor_signup_url ? (
-          <a href={event.vendor_signup_url} target="_blank" rel="noopener noreferrer">
+        {event.vendorUrl ? (
+          <a href={event.vendorUrl} target="_blank" rel="noopener noreferrer">
             <Button className="w-full" disabled={event.status === "closed"} data-testid={`button-vendor-${event.slug}`}>
               <Users className="h-4 w-4 mr-2" />
               Apply for This Event
@@ -65,7 +71,7 @@ function EventVendorCard({ event }: { event: CMSEvent }) {
 export default function Vendors() {
   const { data: events, isLoading } = useEvents();
   
-  const vendorEvents = events?.filter(e => e.vendor_signup_url || e.status === "open") || [];
+  const vendorEvents = events?.filter(e => e.vendorUrl || e.status === "open") || [];
 
   return (
     <div className="py-12 md:py-16">
@@ -92,7 +98,7 @@ export default function Vendors() {
             <h2 className="text-2xl font-bold mb-6">Apply for Upcoming Events</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {vendorEvents.map((event) => (
-                <EventVendorCard key={event.id} event={event} />
+                <EventVendorCard key={event.slug} event={event} />
               ))}
             </div>
           </section>
