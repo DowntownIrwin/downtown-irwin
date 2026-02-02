@@ -172,13 +172,10 @@ import sponsorsPage from "@/content/pages/sponsors.json";
 import calendarPage from "@/content/pages/calendar.json";
 import contactPage from "@/content/pages/contact.json";
 
-// Import events
-import carCruise2026 from "@/content/events/car-cruise-2026.json";
-import streetMarketSpring2026 from "@/content/events/street-market-spring-2026.json";
-import nightMarketSummer2026 from "@/content/events/night-market-summer-2026.json";
-
-// Import galleries
-import carCruise2025Gallery from "@/content/galleries/car-cruise-2025.json";
+// Dynamic imports using Vite's glob import
+// This automatically loads all JSON files from these directories
+const eventModules = import.meta.glob("@/content/events/*.json", { eager: true });
+const galleryModules = import.meta.glob("@/content/galleries/*.json", { eager: true });
 
 // Exports
 export const site = siteSettings as SiteSettings;
@@ -197,15 +194,15 @@ export const allPages: CMSPage[] = [
   contactPage as CMSPage,
 ];
 
-export const allEvents: CMSEvent[] = [
-  carCruise2026 as CMSEvent,
-  streetMarketSpring2026 as CMSEvent,
-  nightMarketSummer2026 as CMSEvent,
-];
+// Dynamically load all events from the events folder
+export const allEvents: CMSEvent[] = Object.values(eventModules).map(
+  (mod: any) => mod.default as CMSEvent
+);
 
-export const allGalleries: CMSGallery[] = [
-  carCruise2025Gallery as CMSGallery,
-];
+// Dynamically load all galleries from the galleries folder
+export const allGalleries: CMSGallery[] = Object.values(galleryModules).map(
+  (mod: any) => mod.default as CMSGallery
+);
 
 // Helper functions
 export function getPageBySlug(slug: string): CMSPage | undefined {
