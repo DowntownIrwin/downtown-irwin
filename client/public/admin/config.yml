@@ -168,28 +168,12 @@ collections:
         required: false
         hint: "Main image shown as the gallery thumbnail"
 
-      - label: "Photo Source"
-        name: "sourceType"
-        widget: "select"
-        options:
-          - { label: "Upload photos here", value: "uploaded" }
-          - { label: "Link to Google Drive album", value: "drive" }
-          - { label: "Link to Facebook album", value: "facebook" }
-        default: "uploaded"
-        hint: "Where are the photos stored?"
-
-      - label: "External Album Link"
-        name: "sourceUrl"
-        widget: "string"
-        required: false
-        hint: "Paste the Google Drive or Facebook album URL here"
-
       - label: "Photos"
         name: "photos"
         widget: "list"
         required: false
-        hint: "Add photos if using 'Upload photos here' option"
-        collapsed: true
+        hint: "Upload photos to display in this gallery"
+        collapsed: false
         fields:
           - label: "Image"
             name: "image"
@@ -198,6 +182,12 @@ collections:
             name: "caption"
             widget: "string"
             required: false
+
+      - label: "Google Drive Album Link"
+        name: "googleDriveUrl"
+        widget: "string"
+        required: false
+        hint: "Optional: Link to a Google Drive album with additional photos"
 
   - name: "pages"
     label: "Pages"

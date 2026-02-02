@@ -161,14 +161,16 @@ export interface CMSGallery {
   slug: string;
   title: string;
   description?: string;
-  sourceType: "uploaded" | "drive" | "facebook";
-  sourceUrl?: string | null;
   featured: boolean;
   coverImage?: string | null;
-  photos: Array<{
+  photos?: Array<{
     image: string;
     caption?: string;
   }>;
+  googleDriveUrl?: string | null;
+  // Legacy fields for backward compatibility
+  sourceType?: "uploaded" | "drive" | "facebook";
+  sourceUrl?: string | null;
 }
 
 export interface SiteSettings {

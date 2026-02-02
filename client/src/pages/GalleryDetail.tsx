@@ -31,6 +31,8 @@ export default function GalleryDetail() {
   }
 
   const photos = gallery.photos || [];
+  // Support both new googleDriveUrl and legacy sourceUrl field
+  const externalAlbumUrl = (gallery as any).googleDriveUrl || (gallery as any).sourceUrl;
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -44,19 +46,20 @@ export default function GalleryDetail() {
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-4" data-testid="text-gallery-title">{gallery.title}</h1>
         {gallery.description && (
-          <p className="text-lg text-muted-foreground max-w-3xl">
+          <p className="text-lg text-muted-foreground max-w-3xl mb-4">
             {gallery.description}
           </p>
         )}
-        {gallery.sourceUrl && (
+        {externalAlbumUrl && (
           <a
-            href={gallery.sourceUrl}
+            href={externalAlbumUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-primary hover:underline mt-4"
           >
-            <ExternalLink className="h-4 w-4" />
-            View original album
+            <Button variant="outline" data-testid="button-google-drive-album">
+              <ExternalLink className="h-4 w-4 mr-2" />
+              View full album on Google Drive
+            </Button>
           </a>
         )}
       </div>

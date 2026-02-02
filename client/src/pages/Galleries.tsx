@@ -6,6 +6,8 @@ import { allGalleries, type CMSGallery } from "@/lib/content";
 
 function GalleryCard({ gallery }: { gallery: CMSGallery }) {
   const photoCount = gallery.photos?.length || 0;
+  // Support both new googleDriveUrl and legacy sourceUrl field
+  const externalAlbumUrl = (gallery as any).googleDriveUrl || (gallery as any).sourceUrl;
   
   return (
     <Card className="overflow-hidden hover-elevate" data-testid={`card-gallery-${gallery.slug}`}>
@@ -40,21 +42,21 @@ function GalleryCard({ gallery }: { gallery: CMSGallery }) {
             {gallery.description}
           </p>
         )}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <span className="text-sm text-muted-foreground">
             {photoCount} {photoCount === 1 ? "photo" : "photos"}
           </span>
-          {gallery.sourceType === "uploaded" && photoCount > 0 ? (
+          {photoCount > 0 ? (
             <Link href={`/galleries/${gallery.slug}`}>
               <Button variant="outline" size="sm" data-testid={`button-view-gallery-${gallery.slug}`}>
                 View Gallery
               </Button>
             </Link>
-          ) : gallery.sourceUrl ? (
-            <a href={gallery.sourceUrl} target="_blank" rel="noopener noreferrer">
+          ) : externalAlbumUrl ? (
+            <a href={externalAlbumUrl} target="_blank" rel="noopener noreferrer">
               <Button variant="outline" size="sm" data-testid={`button-external-gallery-${gallery.slug}`}>
                 <ExternalLink className="h-4 w-4 mr-1" />
-                View Photos
+                Google Drive
               </Button>
             </a>
           ) : (
