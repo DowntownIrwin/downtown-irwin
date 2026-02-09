@@ -1,61 +1,108 @@
+import { sql } from "drizzle-orm";
+import { pgTable, text, varchar, integer, boolean, timestamp, serial } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const announcementSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  content: z.string(),
-  active: z.boolean(),
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
 });
 
-export const featuredEventSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  date: z.string(),
-  description: z.string(),
+export const events = pgTable("events", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  date: text("date").notNull(),
+  time: text("time").notNull(),
+  location: text("location").notNull(),
+  category: text("category").notNull(),
+  featured: boolean("featured").default(false),
+  imageUrl: text("image_url"),
 });
 
-export const adminDataSchema = z.object({
-  announcements: z.array(announcementSchema),
-  featuredEvents: z.array(featuredEventSchema),
+export const vehicleRegistrations = pgTable("vehicle_registrations", {
+  id: serial("id").primaryKey(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone").notNull(),
+  vehicleYear: text("vehicle_year").notNull(),
+  vehicleMake: text("vehicle_make").notNull(),
+  vehicleModel: text("vehicle_model").notNull(),
+  vehicleColor: text("vehicle_color").notNull(),
+  vehicleClass: text("vehicle_class").notNull(),
+  specialRequests: text("special_requests"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const eventSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  date: z.string(),
-  time: z.string().optional(),
-  location: z.string().optional(),
-  description: z.string(),
-  imageUrl: z.string().optional(),
-  featured: z.boolean().optional(),
+export const sponsorshipInquiries = pgTable("sponsorship_inquiries", {
+  id: serial("id").primaryKey(),
+  businessName: text("business_name").notNull(),
+  contactName: text("contact_name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone").notNull(),
+  level: text("level").notNull(),
+  message: text("message"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const sponsorSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  tier: z.enum(['presenting', 'gold', 'silver', 'supporting']),
-  logoUrl: z.string().optional(),
-  website: z.string().optional(),
+export const sponsors = pgTable("sponsors", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  level: text("level").notNull(),
+  logoUrl: text("logo_url"),
+  websiteUrl: text("website_url"),
 });
 
-export const carCruiseSponsorsSchema = z.object({
-  presenting: z.array(sponsorSchema),
-  gold: z.array(sponsorSchema),
-  silver: z.array(sponsorSchema),
-  supporting: z.array(sponsorSchema),
+export const businesses = pgTable("businesses", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  address: text("address").notNull(),
+  phone: text("phone"),
+  website: text("website"),
+  category: text("category").notNull(),
+  imageUrl: text("image_url"),
 });
 
-export const contactFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email"),
-  subject: z.string().min(1, "Subject is required"),
-  message: z.string().min(1, "Message is required"),
+export const contactMessages = pgTable("contact_messages", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  subject: text("subject").notNull(),
+  message: text("message").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
-export type Announcement = z.infer<typeof announcementSchema>;
-export type FeaturedEvent = z.infer<typeof featuredEventSchema>;
-export type AdminData = z.infer<typeof adminDataSchema>;
-export type Event = z.infer<typeof eventSchema>;
-export type Sponsor = z.infer<typeof sponsorSchema>;
-export type CarCruiseSponsors = z.infer<typeof carCruiseSponsorsSchema>;
-export type ContactForm = z.infer<typeof contactFormSchema>;
+export const insertUserSchema = createInsertSchema(users).pick({
+  username: true,
+  password: true,
+});
+
+export const insertEventSchema = createInsertSchema(events).omit({ id: true });
+
+export const insertVehicleRegistrationSchema = createInsertSchema(vehicleRegistrations).omit({ id: true, createdAt: true });
+
+export const insertSponsorshipInquirySchema = createInsertSchema(sponsorshipInquiries).omit({ id: true, createdAt: true });
+
+export const insertSponsorSchema = createInsertSchema(sponsors).omit({ id: true });
+
+export const insertBusinessSchema = createInsertSchema(businesses).omit({ id: true });
+
+export const insertContactMessageSchema = createInsertSchema(contactMessages).omit({ id: true, createdAt: true });
+
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof users.$inferSelect;
+export type Event = typeof events.$inferSelect;
+export type InsertEvent = z.infer<typeof insertEventSchema>;
+export type VehicleRegistration = typeof vehicleRegistrations.$inferSelect;
+export type InsertVehicleRegistration = z.infer<typeof insertVehicleRegistrationSchema>;
+export type SponsorshipInquiry = typeof sponsorshipInquiries.$inferSelect;
+export type InsertSponsorshipInquiry = z.infer<typeof insertSponsorshipInquirySchema>;
+export type Sponsor = typeof sponsors.$inferSelect;
+export type InsertSponsor = z.infer<typeof insertSponsorSchema>;
+export type Business = typeof businesses.$inferSelect;
+export type InsertBusiness = z.infer<typeof insertBusinessSchema>;
+export type ContactMessage = typeof contactMessages.$inferSelect;
+export type InsertContactMessage = z.infer<typeof insertContactMessageSchema>;

@@ -1,154 +1,151 @@
-import type { AdminData, Event, CarCruiseSponsors, ContactForm } from "@shared/schema";
-import * as fs from "fs";
-import * as path from "path";
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const ADMIN_DATA_FILE = path.join(DATA_DIR, "admin-data.json");
+import {
+  type User, type InsertUser,
+  type Event, type InsertEvent,
+  type VehicleRegistration, type InsertVehicleRegistration,
+  type SponsorshipInquiry, type InsertSponsorshipInquiry,
+  type Sponsor, type InsertSponsor,
+  type Business, type InsertBusiness,
+  type ContactMessage, type InsertContactMessage,
+  users, events, vehicleRegistrations, sponsorshipInquiries, sponsors, businesses, contactMessages,
+} from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
-  getAdminData(): Promise<AdminData>;
-  saveAdminData(data: AdminData): Promise<void>;
+  getUser(id: string): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+
   getEvents(): Promise<Event[]>;
-  getCarCruiseSponsors(): Promise<CarCruiseSponsors>;
-  saveContactMessage(form: ContactForm): Promise<void>;
+  getEvent(id: number): Promise<Event | undefined>;
+  createEvent(event: InsertEvent): Promise<Event>;
+  updateEvent(id: number, event: Partial<InsertEvent>): Promise<Event | undefined>;
+  deleteEvent(id: number): Promise<boolean>;
+
+  getVehicleRegistrations(): Promise<VehicleRegistration[]>;
+  createVehicleRegistration(reg: InsertVehicleRegistration): Promise<VehicleRegistration>;
+
+  getSponsorshipInquiries(): Promise<SponsorshipInquiry[]>;
+  createSponsorshipInquiry(inquiry: InsertSponsorshipInquiry): Promise<SponsorshipInquiry>;
+
+  getSponsors(): Promise<Sponsor[]>;
+  createSponsor(sponsor: InsertSponsor): Promise<Sponsor>;
+  updateSponsor(id: number, sponsor: Partial<InsertSponsor>): Promise<Sponsor | undefined>;
+  deleteSponsor(id: number): Promise<boolean>;
+
+  getBusinesses(): Promise<Business[]>;
+  createBusiness(business: InsertBusiness): Promise<Business>;
+  updateBusiness(id: number, business: Partial<InsertBusiness>): Promise<Business | undefined>;
+  deleteBusiness(id: number): Promise<boolean>;
+
+  getContactMessages(): Promise<ContactMessage[]>;
+  createContactMessage(message: InsertContactMessage): Promise<ContactMessage>;
 }
 
-const defaultAdminData: AdminData = {
-  announcements: [
-    {
-      id: "1",
-      title: "Summer Events",
-      content: "Check out our upcoming summer events including the famous Irwin Car Cruise!",
-      active: true,
-    },
-  ],
-  featuredEvents: [
-    {
-      id: "1",
-      title: "Irwin Car Cruise 2026",
-      date: "August 15, 2026",
-      description: "Join us for the biggest car cruise in the region! Classic cars, live music, and family fun.",
-    },
-    {
-      id: "2",
-      title: "Summer Farmers Market",
-      date: "Every Saturday",
-      description: "Fresh local produce, artisan goods, and community connection in Downtown Irwin.",
-    },
-    {
-      id: "3",
-      title: "Fall Harvest Festival",
-      date: "October 10, 2026",
-      description: "Celebrate the harvest season with local vendors, pumpkin decorating, and autumn treats.",
-    },
-  ],
-};
-
-const defaultEvents: Event[] = [
-  {
-    id: "1",
-    title: "Irwin Car Cruise 2026",
-    date: "August 15, 2026",
-    time: "4:00 PM - 9:00 PM",
-    location: "Main Street, Irwin PA",
-    description: "The biggest car cruise in the region! Featuring hundreds of classic and custom cars, live music, food vendors, and family activities.",
-    featured: true,
-  },
-  {
-    id: "2",
-    title: "Summer Farmers Market",
-    date: "Every Saturday, June - September",
-    time: "9:00 AM - 1:00 PM",
-    location: "Downtown Irwin",
-    description: "Fresh local produce, baked goods, artisan crafts, and more from local vendors.",
-    featured: true,
-  },
-  {
-    id: "3",
-    title: "Fall Harvest Festival",
-    date: "October 10, 2026",
-    time: "11:00 AM - 6:00 PM",
-    location: "Main Street, Irwin PA",
-    description: "Celebrate autumn with pumpkin decorating, apple cider, live entertainment, and local vendors.",
-    featured: false,
-  },
-  {
-    id: "4",
-    title: "Holiday Market",
-    date: "December 5-6, 2026",
-    time: "10:00 AM - 5:00 PM",
-    location: "Downtown Irwin",
-    description: "Shop for unique holiday gifts from local artisans and enjoy festive treats and entertainment.",
-    featured: false,
-  },
-];
-
-const defaultSponsors: CarCruiseSponsors = {
-  presenting: [],
-  gold: [],
-  silver: [],
-  supporting: [],
-};
-
-function ensureDataDir(): void {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-}
-
-function readJsonFile<T>(filePath: string, defaultValue: T): T {
-  try {
-    if (fs.existsSync(filePath)) {
-      const data = fs.readFileSync(filePath, "utf-8");
-      return JSON.parse(data);
-    }
-  } catch (error) {
-    console.error(`Error reading ${filePath}:`, error);
-  }
-  return defaultValue;
-}
-
-function writeJsonFile<T>(filePath: string, data: T): void {
-  ensureDataDir();
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
-}
-
-export class FileStorage implements IStorage {
-  private events: Event[];
-  private carCruiseSponsors: CarCruiseSponsors;
-  private contactMessages: ContactForm[];
-
-  constructor() {
-    ensureDataDir();
-    this.events = [...defaultEvents];
-    this.carCruiseSponsors = { ...defaultSponsors };
-    this.contactMessages = [];
-    
-    if (!fs.existsSync(ADMIN_DATA_FILE)) {
-      writeJsonFile(ADMIN_DATA_FILE, defaultAdminData);
-    }
+export class DatabaseStorage implements IStorage {
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
-  async getAdminData(): Promise<AdminData> {
-    return readJsonFile(ADMIN_DATA_FILE, defaultAdminData);
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
-  async saveAdminData(data: AdminData): Promise<void> {
-    writeJsonFile(ADMIN_DATA_FILE, data);
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db.insert(users).values(insertUser).returning();
+    return user;
   }
 
   async getEvents(): Promise<Event[]> {
-    return this.events;
+    return db.select().from(events);
   }
 
-  async getCarCruiseSponsors(): Promise<CarCruiseSponsors> {
-    return this.carCruiseSponsors;
+  async getEvent(id: number): Promise<Event | undefined> {
+    const [event] = await db.select().from(events).where(eq(events.id, id));
+    return event;
   }
 
-  async saveContactMessage(form: ContactForm): Promise<void> {
-    this.contactMessages.push(form);
-    console.log("Contact message received:", form);
+  async createEvent(event: InsertEvent): Promise<Event> {
+    const [created] = await db.insert(events).values(event).returning();
+    return created;
+  }
+
+  async updateEvent(id: number, event: Partial<InsertEvent>): Promise<Event | undefined> {
+    const [updated] = await db.update(events).set(event).where(eq(events.id, id)).returning();
+    return updated;
+  }
+
+  async deleteEvent(id: number): Promise<boolean> {
+    const result = await db.delete(events).where(eq(events.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getVehicleRegistrations(): Promise<VehicleRegistration[]> {
+    return db.select().from(vehicleRegistrations);
+  }
+
+  async createVehicleRegistration(reg: InsertVehicleRegistration): Promise<VehicleRegistration> {
+    const [created] = await db.insert(vehicleRegistrations).values(reg).returning();
+    return created;
+  }
+
+  async getSponsorshipInquiries(): Promise<SponsorshipInquiry[]> {
+    return db.select().from(sponsorshipInquiries);
+  }
+
+  async createSponsorshipInquiry(inquiry: InsertSponsorshipInquiry): Promise<SponsorshipInquiry> {
+    const [created] = await db.insert(sponsorshipInquiries).values(inquiry).returning();
+    return created;
+  }
+
+  async getSponsors(): Promise<Sponsor[]> {
+    return db.select().from(sponsors);
+  }
+
+  async createSponsor(sponsor: InsertSponsor): Promise<Sponsor> {
+    const [created] = await db.insert(sponsors).values(sponsor).returning();
+    return created;
+  }
+
+  async updateSponsor(id: number, sponsor: Partial<InsertSponsor>): Promise<Sponsor | undefined> {
+    const [updated] = await db.update(sponsors).set(sponsor).where(eq(sponsors.id, id)).returning();
+    return updated;
+  }
+
+  async deleteSponsor(id: number): Promise<boolean> {
+    const result = await db.delete(sponsors).where(eq(sponsors.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getBusinesses(): Promise<Business[]> {
+    return db.select().from(businesses);
+  }
+
+  async createBusiness(business: InsertBusiness): Promise<Business> {
+    const [created] = await db.insert(businesses).values(business).returning();
+    return created;
+  }
+
+  async updateBusiness(id: number, business: Partial<InsertBusiness>): Promise<Business | undefined> {
+    const [updated] = await db.update(businesses).set(business).where(eq(businesses.id, id)).returning();
+    return updated;
+  }
+
+  async deleteBusiness(id: number): Promise<boolean> {
+    const result = await db.delete(businesses).where(eq(businesses.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getContactMessages(): Promise<ContactMessage[]> {
+    return db.select().from(contactMessages);
+  }
+
+  async createContactMessage(message: InsertContactMessage): Promise<ContactMessage> {
+    const [created] = await db.insert(contactMessages).values(message).returning();
+    return created;
   }
 }
 
-export const storage = new FileStorage();
+export const storage = new DatabaseStorage();

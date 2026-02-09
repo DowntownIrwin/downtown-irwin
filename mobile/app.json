@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Downtown Irwin",
+    "slug": "downtown-irwin",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#C45C3A",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.downtownirwin.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app uses your location to find nearby businesses and events in Downtown Irwin."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#C45C3A"
+      },
+      "package": "com.downtownirwin.app"
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    },
+    "scheme": "downtown-irwin",
+    "plugins": [
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "YOUR_EAS_PROJECT_ID"
+      }
+    }
+  }
+}

@@ -1,241 +1,70 @@
-# Downtown Irwin / IBPA Website
+# Downtown Irwin App
 
 ## Overview
-A production-ready community website for Downtown Irwin and the Irwin Business & Professional Association (IBPA). Built with React + Vite for static deployment. Content is managed via Decap CMS (formerly Netlify CMS) with a Wix-like admin dashboard.
+Community web application and native mobile app for Downtown Irwin, Pennsylvania featuring information from the Irwin Business & Professional Association (IBPA) and the annual Downtown Irwin Car Cruise. Built with React + Express + PostgreSQL for the web, and React Native + Expo for the mobile app.
 
-## Tech Stack
-- **Frontend**: React 18, TypeScript, Vite
-- **Styling**: Tailwind CSS, shadcn/ui components
-- **Routing**: Wouter (client-side)
-- **CMS**: Decap CMS with Netlify Identity + Git Gateway
-- **Data**: JSON content files in `client/src/content/`
-- **Build**: Static site output
+## Recent Changes
+- Initial build: Full-stack web app with 7 pages, database-backed content, vehicle registration, sponsorship inquiries, contact form
+- Added native mobile app (React Native + Expo) in `mobile/` directory with 9 screens
+- Added CORS middleware to backend for mobile app API access
+- Added aerial photo of Downtown Irwin and IBPA logo to hero sections
+- Added admin authentication system (session-based with express-session + connect-pg-simple + bcrypt)
+- Added admin dashboard with CRUD management for events, businesses, and sponsors
+- Added image upload support for admin content management
+- Default admin credentials: username `admin`, password `admin123`
+- Added GitHub integration: push project code to GitHub from admin dashboard
+- GitHub client uses Replit's native GitHub connection (OAuth via @octokit/rest)
 
-## Project Structure
+## Architecture
 
-```
-client/
-  public/
-    admin/
-      index.html           # Decap CMS admin dashboard
-      config.yml           # CMS collection configuration
-    uploads/               # Media uploads from CMS
-  src/
-    content/               # Editable JSON content (managed by Decap CMS)
-      events/              # Event JSON files
-      pages/               # Page content (home, about, vendors, contact)
-      sponsors/            # Sponsor tier configuration
-      galleries/           # Photo gallery entries
-      site.json            # Global site settings
-    hooks/
-      useCMS.ts            # React Query hooks for content
-    lib/
-      content.ts           # Content imports and helpers
-      cms.ts               # External API fetching (sponsor logos)
-    components/
-      Layout.tsx           # Header, Footer, Navigation
-      SEO.tsx              # Per-page meta tags
-      ui/                  # shadcn/ui components
-    pages/
-      Home.tsx             # Homepage with hero, events, CTAs
-      Events.tsx           # Events index with search
-      EventDetail.tsx      # Event detail page (/events/:slug)
-      Calendar.tsx         # Native calendar with month grid and list views
-      Vendors.tsx          # Per-event vendor signup links
-      Sponsors.tsx         # Tiers + sponsor logos
-      CarCruise.tsx        # Car Cruise hub page
-      StreetMarket.tsx     # Street Market hub page
-      NightMarket.tsx      # Night Market hub page
-      Contact.tsx          # Contact form
-    App.tsx                # Routes and providers
+### Frontend (React + Vite) — Web App
+- **Pages**: Home, Events, Car Cruise, Car Cruise Register, Sponsorship, Businesses, About, Contact, Admin Login, Admin Dashboard
+- **Routing**: wouter
+- **State**: @tanstack/react-query
+- **Styling**: Tailwind CSS with shadcn/ui components
+- **Theme**: Warm community-focused palette (primary: warm red-orange, accent: blue)
 
-shared/
-  types.ts                 # TypeScript interfaces
-```
+### Mobile App (React Native + Expo) — `mobile/` directory
+- **Screens**: Home, Events, Car Cruise, Vehicle Registration, Business Directory, More, About IBPA, Sponsorship, Contact
+- **Navigation**: React Navigation (bottom tabs + native stacks)
+- **Icons**: @expo/vector-icons (Ionicons)
+- **API**: Connects to Express backend via REST API with CORS
+- **Build**: Expo EAS Build for iOS/Android app store submissions
+- **Key files**:
+  - `mobile/App.tsx` - Entry point
+  - `mobile/src/navigation/AppNavigator.tsx` - Tab + stack navigation
+  - `mobile/src/screens/` - All 9 screens
+  - `mobile/src/lib/api.ts` - API client (update API_BASE for your deployment)
+  - `mobile/src/lib/theme.ts` - Shared design tokens
+  - `mobile/src/lib/constants.ts` - IBPA info, car cruise details, sponsorship tiers
 
-## Pages
-- **Home** (`/`) - Hero, signature events, upcoming events, CTAs
-- **Events** (`/events`) - Event cards with search, grouped by status
-- **Event Detail** (`/events/:slug`) - Individual event details
-- **Calendar** (`/calendar`) - Native calendar with month grid and list views, filtering by status/category
-- **Vendors** (`/vendors`) - Per-event vendor signup links
-- **Sponsors** (`/sponsors`) - Tier cards + sponsor logos
-- **Car Cruise** (`/car-cruise`) - Hub page for car cruise event
-- **Street Market** (`/street-market`) - Hub page for street market
-- **Night Market** (`/night-market`) - Hub page for night market
-- **Contact** (`/contact`) - Contact form
-- **Admin** (`/admin`) - Decap CMS dashboard (requires login)
+### Backend (Express)
+- **Public API Routes**: `/api/events`, `/api/businesses`, `/api/sponsors`, `/api/vehicle-registrations`, `/api/sponsorship-inquiries`, `/api/contact`
+- **Auth Routes**: `/api/auth/login`, `/api/auth/logout`, `/api/auth/me`
+- **Admin Routes** (require auth): `/api/admin/events`, `/api/admin/businesses`, `/api/admin/sponsors`, `/api/admin/upload`, `/api/admin/vehicle-registrations`, `/api/admin/sponsorship-inquiries`, `/api/admin/contact-messages`
+- **GitHub Routes** (require auth): `/api/admin/github/user`, `/api/admin/github/repos`, `/api/admin/github/push`
+- **Authentication**: Session-based with express-session + connect-pg-simple (PostgreSQL session store) + bcrypt password hashing
+- **Image Uploads**: multer-based, stored in `server/uploads/`, served at `/uploads/*`
+- **Database**: PostgreSQL with Drizzle ORM
+- **Seed Data**: Events, sponsors, businesses, and default admin user auto-seeded on startup
+- **CORS**: Enabled for mobile app access
 
-## Decap CMS Admin Dashboard
+### Data Models
+- `events` - Community events with categories and featured flag
+- `vehicleRegistrations` - Car cruise vehicle registration entries
+- `sponsorshipInquiries` - Sponsorship interest form submissions
+- `sponsors` - Current event sponsors
+- `businesses` - Downtown business directory
+- `contactMessages` - General contact form submissions
 
-### Accessing the Admin
-Navigate to `/admin` to access the content management system. Non-technical editors can:
-- Add/edit/delete events with scheduling options
-- Update page content (home, about, vendors, contact)
-- Manage sponsor tiers and pricing
-- Create photo galleries with links
-- Update site settings
-- Create and schedule announcements
+### Key Files
+- `shared/schema.ts` - All Drizzle schemas and Zod validators
+- `server/routes.ts` - API endpoints
+- `server/storage.ts` - Database storage layer
+- `server/seed.ts` - Seed data for initial load
+- `client/src/lib/constants.ts` - IBPA info, car cruise details, sponsorship levels
 
-### Enhanced Editor Experience
-- **Grouped Fields**: Event editor organizes fields into collapsible cards (Basics, Content, Links, Scheduling, Options)
-- **Live Preview**: Toggle preview pane to see changes in real-time as you edit
-- **Auto-Generated Slugs**: URLs are automatically created from titles
-- **Scheduling System**: Set visibility windows and registration periods
-
-### How It Works
-1. Editors log in via Netlify Identity
-2. Make changes in the visual editor
-3. Use the preview pane to see changes before publishing
-4. Click "Publish" to save
-5. Changes are committed directly to GitHub
-6. GitHub Actions rebuilds and deploys the site automatically
-
-### Event Scheduling
-Events support automated visibility and registration status:
-- **Visible From/Until**: Control when an event appears on the site
-- **Registration Opens/Closes**: Automatically switch status between "Coming Soon" and "Open for Registration"
-- **Force Show Buttons**: Override to always show registration buttons regardless of status
-
-### Announcements
-- Create site-wide announcements with scheduling
-- Set publish date and expiration
-- Pin important announcements to appear first
-
-## Content Structure
-
-### Events (`client/src/content/events/*.json`)
-```json
-{
-  "id": "car-cruise-2026",
-  "slug": "car-cruise-2026",
-  "title": "Irwin Car Cruise 2026",
-  "date": "August 15, 2026",
-  "time": "10:00 AM - 8:00 PM",
-  "location": "Main Street, Irwin",
-  "description": "Annual car cruise event...",
-  "status": "upcoming",
-  "vendor_signup_url": "https://...",
-  "sponsor_url": "https://...",
-  "register_url": "https://...",
-  "is_car_cruise": true
-}
-```
-
-### Sponsor Tiers (`client/src/content/sponsors/tiers.json`)
-```json
-{
-  "tiers": [
-    {
-      "id": "presenting",
-      "name": "Presenting Sponsor",
-      "price": 2500,
-      "benefits": ["Premier logo placement", "VIP tent", "..."],
-      "square_url": "https://square.link/...",
-      "order": 1
-    }
-  ]
-}
-```
-
-### Site Settings (`client/src/content/site.json`)
-```json
-{
-  "site_name": "Downtown Irwin",
-  "tagline": "The biggest little town in Pennsylvania",
-  "contact_email": "jmsmaligo@gmail.com",
-  "contact_phone": "(412) 555-0100",
-  "address": "Main Street, Irwin, PA 15642",
-  "facebook_url": "https://www.facebook.com/...",
-  "instagram_url": ""
-}
-```
-
-## Development
-
-```bash
-npm run dev    # Start development server on port 5000
-npm run build  # Build static site to dist/
-npm run check  # TypeScript type checking
-```
-
-## Netlify Setup for Decap CMS (One-Time)
-
-### 1. Deploy to Netlify
-1. Go to [Netlify](https://app.netlify.com)
-2. Click "Add new site" → "Import an existing project"
-3. Connect your GitHub repository
-4. Build settings:
-   - **Build command**: `npm run build`
-   - **Publish directory**: `dist/public`
-5. Deploy the site
-
-### 2. Enable Netlify Identity
-1. Go to Site settings → Identity
-2. Click "Enable Identity"
-3. Under Registration, select **"Invite only"** (important for security)
-4. Under External providers, optionally enable Google/GitHub login
-
-### 3. Enable Git Gateway
-1. Go to Site settings → Identity → Services
-2. Click "Enable Git Gateway"
-3. This allows the CMS to commit to your GitHub repo
-
-### 4. Invite Editors
-1. Go to Identity tab
-2. Click "Invite users"
-3. Enter email addresses of content editors
-4. They'll receive an invitation to create an account
-
-### 5. Set Roles (Optional)
-For more granular control:
-1. Go to Site settings → Identity → Registration
-2. Set up roles if you want different permission levels
-
-### Required GitHub Permissions
-The Git Gateway needs these permissions on your repo:
-- Read and write access to code
-- Read access to metadata
-
-## Publishing Workflow
-
-### Content Updates (No Deploy Needed)
-When editors save changes in the CMS:
-1. Changes are committed to GitHub automatically
-2. GitHub Actions triggers a rebuild
-3. Site is deployed with new content
-
-### Code Changes
-For code/design changes, push to GitHub:
-```bash
-git add -A && git commit -m "Update" && git push origin main
-```
-
-Or use the publish script:
-```bash
-bash scripts/publish.sh
-```
-
-## Key Features
-
-- **Wix-like Admin**: Visual CMS at `/admin` for non-technical editors
-- **No Git Knowledge Required**: Editors just click Publish
-- **Automatic Deploys**: GitHub Actions rebuilds on content changes
-- **Event Search**: Users can search events by title, description, location
-- **Back to Top**: Floating button for easy navigation
-- **Status-Based Events**: Events grouped as Open, Upcoming, or Closed
-- **Per-Event Actions**: Vendor signup, sponsor, and register buttons
-- **Hub Pages**: Dedicated pages for Car Cruise, Street Market, Night Market
-- **Responsive Design**: Mobile-first with hamburger menu
-- **Native Calendar**: Interactive month grid with event pills, list view, and status/category filtering
-- **Submenu Navigation**: CMS-driven dropdown menus (desktop) and accordion menus (mobile) via parentMenu field
-- **SEO**: Per-page title, description, and Open Graph tags
-
-## Styling
-- Clean, civic/professional design
-- Blue primary color (#2b5a8a)
-- Mobile-first responsive layout
-- shadcn/ui component library
-
-## Live Site
-GitHub Pages: https://downtownirwin.github.io/downtown-irwin/
+## User Preferences
+- Community-focused, warm design aesthetic
+- Real data from irwinbpa.com and irwincarcruise.org
+- Native mobile app for App Store and Google Play

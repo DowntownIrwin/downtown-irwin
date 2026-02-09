@@ -1,0 +1,155 @@
+Downtown Irwin / IBPA Website
+
+A production-ready community website for Downtown Irwin and the Irwin Business & Professional Association (IBPA). Built with React + Vite for static deployment to GitHub Pages with CMS-driven content from Google Sheets.
+
+Live Site
+
+https://downtownirwin.github.io/downtown-irwin/
+
+Quick Start
+
+npm install
+npm run dev
+The app runs on http://localhost:5000
+
+Publishing (Wix-like)
+
+This site uses a Wix-like publishing model:
+
+Content updates (events, sponsors, site config) are managed via Google Sheets and do NOT require redeploying
+Code updates (design changes, new features) require publishing to GitHub
+How It Works
+
+Content is CMS-driven: All events, sponsor tiers, and site configuration come from a Google Apps Script JSON endpoint. Update your Google Sheet and the site updates automatically (with 10-minute cache).
+
+Code deploys via GitHub Actions: When you push to the main branch, GitHub Actions automatically builds and deploys to GitHub Pages.
+
+Publishing Code Changes
+
+Option 1: Use the Publish Script
+
+bash scripts/publish.sh
+This script will:
+
+Run TypeScript checks
+Build the static site
+Create 404.html for client-side routing
+Commit and push to GitHub
+GitHub Actions then deploys automatically
+Option 2: Manual Publish
+
+# 1. Build the site
+npm run build
+
+# 2. Create 404.html for SPA routing
+cp dist/index.html dist/404.html
+
+# 3. Commit and push
+git add -A
+git commit -m "Publish site - $(date)"
+git push origin main
+One-Time Setup
+
+1. Connect Replit to GitHub
+
+In Replit, authenticate with GitHub to push code:
+
+Option A: Using Git Pane (Recommended)
+
+Open the Git pane in Replit (click the branch icon in the sidebar)
+Click "Connect to GitHub" and authorize Replit
+Your pushes will now work automatically
+Option B: Using Personal Access Token
+
+Create a GitHub Personal Access Token at https://github.com/settings/tokens
+Select scopes: repo (full control of private repositories)
+In Replit Secrets, add a secret named GIT_URL with value:
+https://YOUR_USERNAME:YOUR_TOKEN@github.com/downtownirwin/downtown-irwin.git
+The publish script will use this automatically
+2. Verify Remote Origin
+
+# Check current remote
+git remote -v
+
+# If not set, add it:
+git remote add origin https://github.com/downtownirwin/downtown-irwin.git
+3. Enable GitHub Pages
+
+Go to your GitHub repo → Settings → Pages
+Under "Build and deployment", select:
+Source: GitHub Actions
+The workflow at .github/workflows/static.yml handles the rest
+After Publishing
+
+Once you push to main, GitHub Actions will:
+
+Install dependencies
+Build the site (npm run build)
+Create 404.html for client-side routing
+Deploy the dist/ folder to GitHub Pages
+Your site will be live at: https://downtownirwin.github.io/downtown-irwin/
+
+Pages
+
+Path	Description
+/	Home - Hero, signature events, upcoming events, CTAs
+/events	Events index - Cards grouped by status (Open/Upcoming/Closed)
+/events/:slug	Event detail - Individual event with action buttons
+/calendar	Calendar - EventsCalendar.co embed from CMS
+/vendors	Vendors - Per-event vendor signup links
+/sponsors	Sponsors - Tier cards + sponsor logos section
+/car-cruise	Car Cruise hub page
+/street-market	Street Market hub page
+/night-market	Night Market hub page
+/contact	Contact form
+CMS Configuration
+
+Setting Up the CMS Endpoint
+
+Open client/src/config.ts
+Replace <APPS_SCRIPT_WEB_APP_URL> with your Google Apps Script Web App URL
+Optionally update SPONSORS_LOGO_JSON_URL if you have a different sponsors endpoint
+CMS Routes
+
+Your Google Apps Script should respond to these routes:
+
+?route=site - Site configuration (name, tagline, contact info, calendar embed)
+?route=events - Events list with status, vendor/sponsor URLs
+?route=sponsorTiers - Sponsorship tiers with benefits and Square URLs
+Data Caching
+
+All CMS responses are cached in localStorage for 10 minutes. This ensures:
+
+Fast page loads for returning visitors
+Reduced API calls to your Google Apps Script
+Graceful fallbacks if the CMS is temporarily unavailable
+Project Structure
+
+client/
+  src/
+    config.ts              # CMS endpoints configuration
+    hooks/useCMS.ts        # React Query hooks for CMS data
+    lib/cms.ts             # CMS fetching with localStorage cache
+    components/Layout.tsx  # Header, Footer, Navigation
+    pages/                 # All page components
+
+scripts/
+  publish.sh               # Publish script for deploying to GitHub
+
+.github/workflows/
+  static.yml               # GitHub Actions workflow for Pages deployment
+Tech Stack
+
+Frontend: React 18, TypeScript, Vite
+Styling: Tailwind CSS, shadcn/ui components
+Routing: Wouter (client-side)
+Data Fetching: TanStack Query with localStorage caching
+Deployment: GitHub Pages via GitHub Actions
+Development
+
+npm run dev      # Start development server on port 5000
+npm run build    # Build static site to dist/
+npm run check    # Run TypeScript type checking
+License
+
+Copyright © Downtown Irwin / IBPA. All rights reserved.

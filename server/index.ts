@@ -1,4 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
+import cors from "cors";
+import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
@@ -12,6 +15,14 @@ declare module "http" {
   }
 }
 
+declare module "express-session" {
+  interface SessionData {
+    userId: string;
+  }
+}
+
+app.use(cors());
+
 app.use(
   express.json({
     verify: (req, _res, buf) => {
@@ -21,6 +32,26 @@ app.use(
 );
 
 app.use(express.urlencoded({ extended: false }));
+
+const PgStore = connectPgSimple(session);
+const isProduction = process.env.NODE_ENV === "production";
+app.use(
+  session({
+    store: new PgStore({
+      conString: process.env.DATABASE_URL,
+      createTableIfMissing: true,
+    }),
+    secret: process.env.SESSION_SECRET || (isProduction ? (() => { throw new Error("SESSION_SECRET required in production"); })() : "dev-secret-change-me"),
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "lax",
+    },
+  }),
+);
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -60,6 +91,9 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  const { seedDatabase } = await import("./seed");
+  await seedDatabase().catch(console.error);
+
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
