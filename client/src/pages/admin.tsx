@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -26,8 +26,11 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { usePageTitle } from "@/hooks/use-page-title";
-import type { Event, Business, Sponsor, VehicleRegistration, ContactMessage, SponsorshipInquiry } from "@shared/schema";
+import type { Event, Business, Sponsor, VehicleRegistration, ContactMessage, SponsorshipInquiry, PhotoAlbum, AlbumPhoto, VendorRegistration } from "@shared/schema";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format, parse } from "date-fns";
 import {
   Calendar,
   Building2,
@@ -44,9 +47,14 @@ import {
   Github,
   ExternalLink,
   Loader2,
+  CalendarIcon,
+  Link,
+  Store,
+  Check,
+  X,
 } from "lucide-react";
 
-type Tab = "events" | "businesses" | "sponsors" | "registrations" | "messages" | "inquiries" | "github";
+type Tab = "events" | "businesses" | "sponsors" | "registrations" | "vendors" | "messages" | "inquiries" | "albums" | "github";
 
 export default function Admin() {
   usePageTitle("Admin Dashboard");
@@ -78,8 +86,10 @@ export default function Admin() {
     { key: "businesses", label: "Businesses", icon: Building2 },
     { key: "sponsors", label: "Sponsors", icon: Handshake },
     { key: "registrations", label: "Registrations", icon: Car },
+    { key: "vendors", label: "Vendors", icon: Store },
     { key: "inquiries", label: "Inquiries", icon: ClipboardList },
     { key: "messages", label: "Messages", icon: Mail },
+    { key: "albums", label: "Photo Albums", icon: Image },
     { key: "github", label: "GitHub", icon: Github },
   ];
 
@@ -114,8 +124,10 @@ export default function Admin() {
       {activeTab === "businesses" && <BusinessesManager />}
       {activeTab === "sponsors" && <SponsorsManager />}
       {activeTab === "registrations" && <RegistrationsViewer />}
+      {activeTab === "vendors" && <VendorRegistrationsManager />}
       {activeTab === "inquiries" && <InquiriesViewer />}
       {activeTab === "messages" && <MessagesViewer />}
+      {activeTab === "albums" && <PhotoAlbumsManager />}
       {activeTab === "github" && <GitHubManager />}
     </div>
   );
@@ -205,6 +217,11 @@ function EventsManager() {
                 </div>
                 <p className="text-sm text-muted-foreground">{event.date} | {event.time}</p>
                 <p className="text-sm text-muted-foreground">{event.location}</p>
+                {event.externalLink && (
+                  <a href={event.externalLink} target="_blank" rel="noopener noreferrer" className="mt-1 flex items-center gap-1 text-xs text-primary hover:underline">
+                    <Link className="w-3 h-3" /> {event.externalLink}
+                  </a>
+                )}
                 {event.imageUrl && (
                   <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
                     <Image className="w-3 h-3" /> Has image
@@ -251,7 +268,24 @@ function EventFormDialog({ event, onClose }: { event: Event | null; onClose: () 
     category: event?.category ?? "Community",
     featured: event?.featured ?? false,
     imageUrl: event?.imageUrl ?? "",
+    externalLink: event?.externalLink ?? "",
   });
+
+  const [calendarOpen, setCalendarOpen] = useState(false);
+
+  function parseExistingDate(dateStr: string): Date | undefined {
+    if (!dateStr) return undefined;
+    try {
+      const cleaned = dateStr.replace(/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s*/i, "");
+      const parsed = parse(cleaned, "MMMM d, yyyy", new Date());
+      if (!isNaN(parsed.getTime())) return parsed;
+      const parsed2 = new Date(dateStr);
+      if (!isNaN(parsed2.getTime())) return parsed2;
+    } catch {}
+    return undefined;
+  }
+
+  const selectedDate = parseExistingDate(form.date);
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -292,7 +326,33 @@ function EventFormDialog({ event, onClose }: { event: Event | null; onClose: () 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Date</Label>
-              <Input value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} placeholder="Saturday, April 25, 2026" required data-testid="input-event-date" />
+              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-left font-normal"
+                    data-testid="input-event-date"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {form.date || "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(day) => {
+                      if (day) {
+                        const formatted = format(day, "EEEE, MMMM d, yyyy");
+                        setForm({ ...form, date: formatted });
+                      }
+                      setCalendarOpen(false);
+                    }}
+                    initialFocus
+                    data-testid="calendar-event-date"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="space-y-2">
               <Label>Time</Label>
@@ -329,6 +389,19 @@ function EventFormDialog({ event, onClose }: { event: Event | null; onClose: () 
                 <span className="text-sm">Featured Event</span>
               </label>
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label>External Link</Label>
+            <div className="flex items-center gap-2">
+              <Link className="w-4 h-4 text-muted-foreground shrink-0" />
+              <Input
+                value={form.externalLink}
+                onChange={(e) => setForm({ ...form, externalLink: e.target.value })}
+                placeholder="https://example.com/event-page"
+                data-testid="input-event-external-link"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">Optional link to an external website for this event</p>
           </div>
           <div className="space-y-2">
             <Label>Image</Label>
@@ -553,6 +626,9 @@ function SponsorsManager() {
                 <div className="flex flex-wrap items-center gap-2 mb-1">
                   <h3 className="font-semibold" data-testid={`text-sponsor-name-${sponsor.id}`}>{sponsor.name}</h3>
                   <Badge variant="secondary">{sponsor.level}</Badge>
+                  {sponsor.eventType && (
+                    <Badge variant="outline">{sponsor.eventType === "car-cruise" ? "Car Cruise" : sponsor.eventType === "night-market" ? "Night Market" : sponsor.eventType === "street-market" ? "Street Market" : "General"}</Badge>
+                  )}
                 </div>
                 {sponsor.websiteUrl && (
                   <p className="text-sm text-muted-foreground">{sponsor.websiteUrl}</p>
@@ -590,6 +666,8 @@ function SponsorFormDialog({ sponsor, onClose }: { sponsor: Sponsor | null; onCl
     level: sponsor?.level ?? "Supporting",
     logoUrl: sponsor?.logoUrl ?? "",
     websiteUrl: sponsor?.websiteUrl ?? "",
+    eventType: sponsor?.eventType ?? "car-cruise",
+    sponsorImageUrl: sponsor?.sponsorImageUrl ?? "",
   });
 
   const mutation = useMutation({
@@ -638,6 +716,20 @@ function SponsorFormDialog({ sponsor, onClose }: { sponsor: Sponsor | null; onCl
             </Select>
           </div>
           <div className="space-y-2">
+            <Label>Event</Label>
+            <Select value={form.eventType} onValueChange={(v) => setForm({ ...form, eventType: v })}>
+              <SelectTrigger data-testid="select-sponsor-event-type">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="car-cruise">Car Cruise</SelectItem>
+                <SelectItem value="night-market">Night Market</SelectItem>
+                <SelectItem value="street-market">Street Market</SelectItem>
+                <SelectItem value="general">General / IBPA</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
             <Label>Website URL</Label>
             <Input value={form.websiteUrl} onChange={(e) => setForm({ ...form, websiteUrl: e.target.value })} placeholder="https://..." data-testid="input-sponsor-website" />
           </div>
@@ -652,6 +744,19 @@ function SponsorFormDialog({ sponsor, onClose }: { sponsor: Sponsor | null; onCl
               onChange={(e) => setForm({ ...form, logoUrl: e.target.value })}
               placeholder="Or enter logo URL"
               data-testid="input-sponsor-logo-url"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Sponsor Image</Label>
+            <ImageUploader
+              currentUrl={form.sponsorImageUrl || null}
+              onUpload={(url) => setForm({ ...form, sponsorImageUrl: url })}
+            />
+            <Input
+              value={form.sponsorImageUrl}
+              onChange={(e) => setForm({ ...form, sponsorImageUrl: e.target.value })}
+              placeholder="Optional sponsor image URL"
+              data-testid="input-sponsor-image-url"
             />
           </div>
           <div className="flex justify-end gap-2">
@@ -694,6 +799,175 @@ function RegistrationsViewer() {
               {reg.specialRequests && (
                 <p className="text-muted-foreground col-span-full">Notes: {reg.specialRequests}</p>
               )}
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function VendorRegistrationsManager() {
+  const { toast } = useToast();
+  const [eventFilter, setEventFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  const { data: vendors, isLoading } = useQuery<VendorRegistration[]>({
+    queryKey: ["/api/admin/vendor-registrations"],
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: number; status: string }) => {
+      await apiRequest("PATCH", `/api/admin/vendor-registrations/${id}`, { status });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/vendor-registrations"] });
+      toast({ title: "Vendor status updated" });
+    },
+    onError: () => {
+      toast({ title: "Failed to update status", variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/admin/vendor-registrations/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/vendor-registrations"] });
+      toast({ title: "Vendor registration deleted" });
+    },
+  });
+
+  if (isLoading) return <Skeleton className="h-64 w-full" />;
+
+  const filtered = vendors?.filter((v) => {
+    if (eventFilter !== "all" && v.eventType !== eventFilter) return false;
+    if (statusFilter !== "all" && v.status !== statusFilter) return false;
+    return true;
+  }) ?? [];
+
+  const pendingCount = vendors?.filter((v) => v.status === "pending").length ?? 0;
+
+  const statusColor = (status: string) => {
+    if (status === "approved") return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+    if (status === "denied") return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+    return "";
+  };
+
+  const eventLabel = (type: string) => {
+    if (type === "night-market") return "Night Market";
+    if (type === "street-market") return "Street Market";
+    return type;
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-semibold" data-testid="text-vendors-title">
+            Vendor Registrations ({vendors?.length ?? 0})
+          </h2>
+          {pendingCount > 0 && (
+            <p className="text-sm text-muted-foreground">{pendingCount} pending review</p>
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+        <Select value={eventFilter} onValueChange={setEventFilter}>
+          <SelectTrigger className="w-[160px]" data-testid="select-vendor-event-filter">
+            <SelectValue placeholder="Event" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Events</SelectItem>
+            <SelectItem value="night-market">Night Market</SelectItem>
+            <SelectItem value="street-market">Street Market</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[140px]" data-testid="select-vendor-status-filter">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="approved">Approved</SelectItem>
+            <SelectItem value="denied">Denied</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {filtered.length === 0 && (
+        <p className="text-muted-foreground">No vendor registrations found.</p>
+      )}
+
+      <div className="space-y-3">
+        {filtered.map((vendor) => (
+          <Card key={vendor.id} className="p-4" data-testid={`card-vendor-${vendor.id}`}>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="flex-1 min-w-0 space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="font-semibold" data-testid={`text-vendor-name-${vendor.id}`}>
+                    {vendor.businessName}
+                  </h3>
+                  <Badge variant="secondary">{eventLabel(vendor.eventType)}</Badge>
+                  <Badge variant="secondary">{vendor.vendorCategory}</Badge>
+                  <Badge className={statusColor(vendor.status)}>
+                    {vendor.status.charAt(0).toUpperCase() + vendor.status.slice(1)}
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {vendor.contactName} | {vendor.email} | {vendor.phone}
+                </p>
+                <p className="text-sm">{vendor.description}</p>
+                {vendor.specialRequests && (
+                  <p className="text-sm text-muted-foreground">Notes: {vendor.specialRequests}</p>
+                )}
+              </div>
+              <div className="flex gap-2">
+                {vendor.status === "pending" && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => statusMutation.mutate({ id: vendor.id, status: "approved" })}
+                      disabled={statusMutation.isPending}
+                      data-testid={`button-approve-vendor-${vendor.id}`}
+                    >
+                      <Check className="w-4 h-4 mr-1" /> Approve
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => statusMutation.mutate({ id: vendor.id, status: "denied" })}
+                      disabled={statusMutation.isPending}
+                      data-testid={`button-deny-vendor-${vendor.id}`}
+                    >
+                      <X className="w-4 h-4 mr-1" /> Deny
+                    </Button>
+                  </>
+                )}
+                {vendor.status !== "pending" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => statusMutation.mutate({ id: vendor.id, status: "pending" })}
+                    disabled={statusMutation.isPending}
+                    data-testid={`button-reset-vendor-${vendor.id}`}
+                  >
+                    Reset to Pending
+                  </Button>
+                )}
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => { if (confirm("Delete this vendor registration?")) deleteMutation.mutate(vendor.id); }}
+                  data-testid={`button-delete-vendor-${vendor.id}`}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </Card>
         ))}
@@ -989,6 +1263,301 @@ function GitHubManager() {
             ))}
           </div>
         </Card>
+      )}
+    </div>
+  );
+}
+
+function PhotoAlbumsManager() {
+  const { toast } = useToast();
+  const [showCreate, setShowCreate] = useState(false);
+  const [selectedAlbum, setSelectedAlbum] = useState<PhotoAlbum | null>(null);
+  const [editingAlbum, setEditingAlbum] = useState<PhotoAlbum | null>(null);
+
+  const { data: albums, isLoading } = useQuery<PhotoAlbum[]>({
+    queryKey: ["/api/photo-albums"],
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/admin/photo-albums/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/photo-albums"] });
+      toast({ title: "Album deleted" });
+      if (selectedAlbum) setSelectedAlbum(null);
+    },
+  });
+
+  if (isLoading) return <Skeleton className="h-64 w-full" />;
+
+  if (selectedAlbum) {
+    return <AlbumPhotosManager album={selectedAlbum} onBack={() => setSelectedAlbum(null)} />;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h2 className="text-lg font-semibold">Photo Albums ({albums?.length ?? 0})</h2>
+        <Button onClick={() => setShowCreate(true)} data-testid="button-add-album">
+          <Plus className="w-4 h-4 mr-2" /> Create Album
+        </Button>
+      </div>
+
+      {albums && albums.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {albums.map((album) => (
+            <Card key={album.id} className="overflow-visible" data-testid={`card-album-${album.id}`}>
+              <div className="overflow-hidden rounded-t-md cursor-pointer" onClick={() => setSelectedAlbum(album)}>
+                {album.coverPhotoUrl ? (
+                  <img src={album.coverPhotoUrl} alt={album.title} className="w-full h-40 object-cover" />
+                ) : (
+                  <div className="w-full h-40 bg-muted flex items-center justify-center">
+                    <Image className="w-10 h-10 text-muted-foreground" />
+                  </div>
+                )}
+                <div className="p-4">
+                  <h3 className="font-semibold" data-testid={`text-album-title-${album.id}`}>{album.title}</h3>
+                  {album.description && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{album.description}</p>}
+                </div>
+              </div>
+              <div className="px-4 pb-3 flex gap-2">
+                <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setEditingAlbum(album); }} data-testid={`button-edit-album-${album.id}`}>
+                  <Pencil className="w-3 h-3 mr-1" /> Edit
+                </Button>
+                <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); if (confirm("Delete this album and all its photos?")) deleteMutation.mutate(album.id); }} data-testid={`button-delete-album-${album.id}`}>
+                  <Trash2 className="w-3 h-3 mr-1" /> Delete
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Card className="p-12 text-center">
+          <Image className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
+          <h3 className="font-semibold mb-1">No Photo Albums</h3>
+          <p className="text-sm text-muted-foreground mb-4">Create your first album to start uploading photos from past events.</p>
+          <Button onClick={() => setShowCreate(true)}>
+            <Plus className="w-4 h-4 mr-2" /> Create Album
+          </Button>
+        </Card>
+      )}
+
+      {showCreate && (
+        <AlbumFormDialog album={null} onClose={() => setShowCreate(false)} />
+      )}
+      {editingAlbum && (
+        <AlbumFormDialog album={editingAlbum} onClose={() => setEditingAlbum(null)} />
+      )}
+    </div>
+  );
+}
+
+function AlbumFormDialog({ album, onClose }: { album: PhotoAlbum | null; onClose: () => void }) {
+  const { toast } = useToast();
+  const isEditing = !!album;
+  const [form, setForm] = useState({
+    title: album?.title ?? "",
+    description: album?.description ?? "",
+  });
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (isEditing) {
+        await apiRequest("PATCH", `/api/admin/photo-albums/${album.id}`, form);
+      } else {
+        await apiRequest("POST", "/api/admin/photo-albums", form);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/photo-albums"] });
+      toast({ title: isEditing ? "Album updated" : "Album created" });
+      onClose();
+    },
+    onError: (error) => {
+      toast({ title: "Failed to save album: " + error.message, variant: "destructive" });
+    },
+  });
+
+  return (
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle data-testid="text-album-dialog-title">{isEditing ? "Edit Album" : "Create Album"}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={(e) => { e.preventDefault(); mutation.mutate(); }} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="album-title">Title</Label>
+            <Input id="album-title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Irwin Car Cruise 2025" required data-testid="input-album-title" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="album-description">Description (optional)</Label>
+            <Textarea id="album-description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="A brief description of this album" data-testid="input-album-description" />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="submit" disabled={mutation.isPending} data-testid="button-save-album">
+              {mutation.isPending ? "Saving..." : isEditing ? "Save Changes" : "Create Album"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AlbumPhotosManager({ album, onBack }: { album: PhotoAlbum; onBack: () => void }) {
+  const { toast } = useToast();
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { data: photos, isLoading } = useQuery<AlbumPhoto[]>({
+    queryKey: ["/api/photo-albums", album.id, "photos"],
+  });
+
+  const deletePhotoMutation = useMutation({
+    mutationFn: async (photoId: number) => {
+      await apiRequest("DELETE", `/api/admin/album-photos/${photoId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/photo-albums", album.id, "photos"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/photo-albums"] });
+      toast({ title: "Photo deleted" });
+    },
+  });
+
+  const uploadFiles = async (files: FileList | File[]) => {
+    const imageFiles = Array.from(files).filter(f => /\.(jpg|jpeg|png|gif|webp|avif)$/i.test(f.name));
+    if (imageFiles.length === 0) {
+      toast({ title: "No valid image files found", variant: "destructive" });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      imageFiles.forEach(f => formData.append("photos", f));
+
+      const res = await fetch(`/api/admin/photo-albums/${album.id}/photos`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Upload failed");
+      }
+
+      const newPhotos = await res.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/photo-albums", album.id, "photos"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/photo-albums"] });
+      toast({ title: `Uploaded ${newPhotos.length} photo${newPhotos.length !== 1 ? "s" : ""}` });
+    } catch (error: any) {
+      toast({ title: "Upload failed: " + error.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files.length > 0) {
+      uploadFiles(e.dataTransfer.files);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      uploadFiles(e.target.files);
+      e.target.value = "";
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-4">
+        <Button variant="outline" onClick={onBack} data-testid="button-back-to-albums">
+          Back to Albums
+        </Button>
+        <div>
+          <h2 className="text-lg font-semibold">{album.title}</h2>
+          {album.description && <p className="text-sm text-muted-foreground">{album.description}</p>}
+        </div>
+      </div>
+
+      <div
+        className={`border-2 border-dashed rounded-md p-8 text-center transition-colors ${
+          isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/25"
+        } ${uploading ? "opacity-50 pointer-events-none" : ""}`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        data-testid="drop-zone-photos"
+      >
+        <Upload className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
+        {uploading ? (
+          <div className="flex items-center justify-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <p className="text-sm text-muted-foreground">Uploading photos...</p>
+          </div>
+        ) : (
+          <>
+            <p className="font-medium mb-1">Drag and drop photos here</p>
+            <p className="text-sm text-muted-foreground mb-3">or click to browse files</p>
+            <Button variant="outline" onClick={() => fileInputRef.current?.click()} data-testid="button-browse-photos">
+              Browse Files
+            </Button>
+          </>
+        )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileSelect}
+          data-testid="input-photo-files"
+        />
+      </div>
+
+      {isLoading ? (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="aspect-square rounded-md" />)}
+        </div>
+      ) : photos && photos.length > 0 ? (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          {photos.map((photo) => (
+            <div key={photo.id} className="group relative aspect-square rounded-md overflow-hidden" data-testid={`photo-${photo.id}`}>
+              <img src={photo.url} alt={photo.caption || "Album photo"} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="invisible group-hover:visible bg-white/90 dark:bg-black/90"
+                  onClick={() => { if (confirm("Delete this photo?")) deletePhotoMutation.mutate(photo.id); }}
+                  data-testid={`button-delete-photo-${photo.id}`}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground text-center py-8">No photos in this album yet. Drag and drop some photos above to get started.</p>
       )}
     </div>
   );

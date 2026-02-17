@@ -3,14 +3,13 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ThemeProvider, useTheme } from "@/components/theme-provider";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
-import { Button } from "@/components/ui/button";
-import { Sun, Moon } from "lucide-react";
 import Home from "@/pages/home";
 import Events from "@/pages/events";
+import NightMarket from "@/pages/night-market";
+import StreetMarket from "@/pages/street-market";
 import CarCruise from "@/pages/car-cruise";
 import CarCruiseRegister from "@/pages/car-cruise-register";
 import Sponsorship from "@/pages/sponsorship";
@@ -26,6 +25,10 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/events" component={Events} />
+      <Route path="/night-market" component={NightMarket} />
+      <Route path="/night-market/register" component={NightMarket} />
+      <Route path="/street-market" component={StreetMarket} />
+      <Route path="/street-market/register" component={StreetMarket} />
       <Route path="/car-cruise" component={CarCruise} />
       <Route path="/car-cruise/register" component={CarCruiseRegister} />
       <Route path="/sponsorship" component={Sponsorship} />
@@ -39,37 +42,15 @@ function Router() {
   );
 }
 
-function ThemeToggle() {
-  const { theme, toggleTheme } = useTheme();
-  return (
-    <Button size="icon" variant="ghost" onClick={toggleTheme} data-testid="button-theme-toggle">
-      {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-    </Button>
-  );
-}
-
 function AppLayout() {
-  const style = {
-    "--sidebar-width": "16rem",
-    "--sidebar-width-icon": "3rem",
-  };
-
   return (
-    <SidebarProvider style={style as React.CSSProperties}>
-      <div className="flex min-h-screen w-full">
-        <AppSidebar />
-        <div className="flex flex-col flex-1 min-w-0">
-          <header className="sticky top-0 z-50 flex items-center justify-between gap-4 px-4 py-2 border-b bg-background/90 backdrop-blur-md">
-            <SidebarTrigger data-testid="button-sidebar-toggle" />
-            <ThemeToggle />
-          </header>
-          <main className="flex-1">
-            <Router />
-          </main>
-          <Footer />
-        </div>
-      </div>
-    </SidebarProvider>
+    <div className="flex flex-col min-h-screen w-full">
+      <Navigation />
+      <main className="flex-1">
+        <Router />
+      </main>
+      <Footer />
+    </div>
   );
 }
 

@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { SPONSORSHIP_LEVELS, IBPA_INFO } from "@/lib/constants";
+import { SPONSORSHIP_LEVELS, IBPA_INFO, CAR_CRUISE_INFO } from "@/lib/constants";
 import { insertSponsorshipInquirySchema } from "@shared/schema";
 import type { Sponsor } from "@shared/schema";
 import {
@@ -34,6 +34,7 @@ import {
   Star,
   Loader2,
   Mail,
+  ExternalLink,
   Crown,
   Award,
   Medal,
@@ -57,6 +58,13 @@ const levelIcons: Record<string, typeof Crown> = {
   "Silver Sponsor": Medal,
   "Supporting Sponsor": Heart,
   "Custom Trophy Recognition Partner": Trophy,
+};
+
+const squareLinkMap: Record<string, string> = {
+  "Presenting Sponsor": CAR_CRUISE_INFO.squareLinks.presenting,
+  "Gold Sponsor": CAR_CRUISE_INFO.squareLinks.gold,
+  "Silver Sponsor": CAR_CRUISE_INFO.squareLinks.silver,
+  "Supporting Sponsor": CAR_CRUISE_INFO.squareLinks.supporting,
 };
 
 export default function Sponsorship() {
@@ -135,7 +143,7 @@ export default function Sponsorship() {
                   ${level.price}
                   <span className="text-sm text-muted-foreground font-normal"> per event</span>
                 </p>
-                <ul className="space-y-2">
+                <ul className="space-y-2 mb-4">
                   {level.perks.map((perk, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm">
                       <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
@@ -143,6 +151,18 @@ export default function Sponsorship() {
                     </li>
                   ))}
                 </ul>
+                {squareLinkMap[level.name] && (
+                  <a
+                    href={squareLinkMap[level.name]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid={`link-pay-${level.name.toLowerCase().replace(/\s/g, "-")}`}
+                  >
+                    <Button className="w-full">
+                      <ExternalLink className="w-4 h-4 mr-2" /> Pay Now via Square
+                    </Button>
+                  </a>
+                )}
               </Card>
             );
           })}

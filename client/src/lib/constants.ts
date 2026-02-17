@@ -16,10 +16,18 @@ export const IBPA_INFO = {
 
 export const CAR_CRUISE_INFO = {
   name: "Downtown Irwin Car Cruise",
+  eventType: "car-cruise",
   date: "Saturday, April 25, 2026",
   time: "12:00 PM - 4:00 PM",
   location: "Main Street, Downtown Irwin, PA",
   description: "A springtime car cruise in the heart of Irwin featuring classic, custom, and modern vehicles in a relaxed downtown setting. Food, music, and local vendors.",
+  website: "https://irwincarcruise.org",
+  squareLinks: {
+    presenting: "https://checkout.square.site/merchant/MLG8T1X8MJFZT/checkout/IXLTK6H7ZY36ZWR5VDVHLIO7",
+    gold: "https://checkout.square.site/merchant/MLG8T1X8MJFZT/checkout/DMXXZDLD7DXI6TGOZHANP4D7",
+    silver: "https://checkout.square.site/merchant/MLG8T1X8MJFZT/checkout/4GPYU52NTGE6QLIESFLIBB4O",
+    supporting: "",
+  },
 };
 
 export const SPONSORSHIP_LEVELS = [
@@ -92,6 +100,49 @@ export const VEHICLE_CLASSES = [
   "Truck / SUV",
   "Custom / Hot Rod",
   "Motorcycle",
+  "Other",
+];
+
+export const NIGHT_MARKET_INFO = {
+  name: "Irwin Night Market",
+  eventType: "night-market",
+  date: "Summer 2026 (Dates TBD)",
+  time: "5:00 PM - 9:00 PM",
+  location: "Main Street, Downtown Irwin, PA",
+  description: "An evening marketplace in Downtown Irwin featuring local artisans, food vendors, live entertainment, and community gathering under the lights.",
+  squareLinks: {
+    presenting: "https://checkout.square.site/merchant/MLG8T1X8MJFZT/checkout/IXLTK6H7ZY36ZWR5VDVHLIO7",
+    gold: "https://checkout.square.site/merchant/MLG8T1X8MJFZT/checkout/DMXXZDLD7DXI6TGOZHANP4D7",
+    silver: "https://checkout.square.site/merchant/MLG8T1X8MJFZT/checkout/4GPYU52NTGE6QLIESFLIBB4O",
+    supporting: "",
+  },
+};
+
+export const STREET_MARKET_INFO = {
+  name: "Irwin Street Market",
+  eventType: "street-market",
+  date: "Fall 2026 (Dates TBD)",
+  time: "10:00 AM - 4:00 PM",
+  location: "Main Street, Downtown Irwin, PA",
+  description: "A daytime street market showcasing local produce, handmade goods, artisans, food trucks, and family-friendly activities in the heart of Downtown Irwin.",
+  squareLinks: {
+    presenting: "https://checkout.square.site/merchant/MLG8T1X8MJFZT/checkout/IXLTK6H7ZY36ZWR5VDVHLIO7",
+    gold: "https://checkout.square.site/merchant/MLG8T1X8MJFZT/checkout/DMXXZDLD7DXI6TGOZHANP4D7",
+    silver: "https://checkout.square.site/merchant/MLG8T1X8MJFZT/checkout/4GPYU52NTGE6QLIESFLIBB4O",
+    supporting: "",
+  },
+};
+
+export const VENDOR_CATEGORIES = [
+  "Food & Beverage",
+  "Arts & Crafts",
+  "Jewelry & Accessories",
+  "Home & Garden",
+  "Health & Wellness",
+  "Clothing & Apparel",
+  "Local Produce",
+  "Baked Goods",
+  "Non-Profit / Community",
   "Other",
 ];
 

@@ -9,6 +9,8 @@ import { createServer } from "http";
 const app = express();
 const httpServer = createServer(app);
 
+app.set("trust proxy", 1);
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
@@ -34,21 +36,21 @@ app.use(
 app.use(express.urlencoded({ extended: false }));
 
 const PgStore = connectPgSimple(session);
-const isProduction = process.env.NODE_ENV === "production";
+const isReplit = !!(process.env.REPL_ID || process.env.REPLIT_DEPLOYMENT);
 app.use(
   session({
     store: new PgStore({
       conString: process.env.DATABASE_URL,
       createTableIfMissing: true,
     }),
-    secret: process.env.SESSION_SECRET || (isProduction ? (() => { throw new Error("SESSION_SECRET required in production"); })() : "dev-secret-change-me"),
+    secret: process.env.SESSION_SECRET || "dev-secret-change-me",
     resave: false,
     saveUninitialized: false,
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000,
       httpOnly: true,
-      secure: isProduction,
-      sameSite: "lax",
+      secure: isReplit,
+      sameSite: isReplit ? "none" as const : "lax" as const,
     },
   }),
 );

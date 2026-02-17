@@ -8,6 +8,8 @@ import {
   insertVehicleRegistrationSchema,
   insertSponsorshipInquirySchema,
   insertContactMessageSchema,
+  insertPhotoAlbumSchema,
+  insertVendorRegistrationSchema,
 } from "@shared/schema";
 import { z } from "zod";
 import bcrypt from "bcrypt";
@@ -158,6 +160,24 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/photo-albums", async (_req, res) => {
+    const albums = await storage.getPhotoAlbums();
+    res.json(albums);
+  });
+
+  app.get("/api/photo-albums/:id", async (req, res) => {
+    const id = parseInt(req.params.id as string);
+    const album = await storage.getPhotoAlbum(id);
+    if (!album) return res.status(404).json({ error: "Album not found" });
+    res.json(album);
+  });
+
+  app.get("/api/photo-albums/:id/photos", async (req, res) => {
+    const albumId = parseInt(req.params.id as string);
+    const photos = await storage.getAlbumPhotos(albumId);
+    res.json(photos);
+  });
+
   app.post("/api/admin/upload", requireAuth, upload.single("image"), (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
@@ -299,6 +319,144 @@ export async function registerRoutes(
   app.get("/api/admin/contact-messages", requireAuth, async (_req, res) => {
     const messages = await storage.getContactMessages();
     res.json(messages);
+  });
+
+  app.post("/api/admin/photo-albums", requireAuth, async (req, res) => {
+    try {
+      const data = insertPhotoAlbumSchema.parse(req.body);
+      const album = await storage.createPhotoAlbum(data);
+      res.status(201).json(album);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid data", details: error.errors });
+      } else {
+        res.status(500).json({ error: "Internal server error" });
+      }
+    }
+  });
+
+  app.patch("/api/admin/photo-albums/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id as string);
+      const data = insertPhotoAlbumSchema.partial().parse(req.body);
+      const updated = await storage.updatePhotoAlbum(id, data);
+      if (!updated) return res.status(404).json({ error: "Album not found" });
+      res.json(updated);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/admin/photo-albums/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id as string);
+      const deleted = await storage.deletePhotoAlbum(id);
+      if (!deleted) return res.status(404).json({ error: "Album not found" });
+      res.json({ ok: true });
+    } catch {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/admin/photo-albums/:id/photos", requireAuth, upload.array("photos", 50), async (req, res) => {
+    try {
+      const albumId = parseInt(req.params.id as string);
+      const album = await storage.getPhotoAlbum(albumId);
+      if (!album) return res.status(404).json({ error: "Album not found" });
+
+      const files = req.files as Express.Multer.File[];
+      if (!files || files.length === 0) {
+        return res.status(400).json({ error: "No files uploaded" });
+      }
+
+      const existingPhotos = await storage.getAlbumPhotos(albumId);
+      let sortOrder = existingPhotos.length;
+
+      const photos = [];
+      for (const file of files) {
+        const url = `/uploads/${file.filename}`;
+        const photo = await storage.createAlbumPhoto({
+          albumId,
+          url,
+          caption: null,
+          sortOrder: sortOrder++,
+        });
+        photos.push(photo);
+      }
+
+      if (!album.coverPhotoUrl && photos.length > 0) {
+        await storage.updatePhotoAlbum(albumId, { coverPhotoUrl: photos[0].url });
+      }
+
+      res.status(201).json(photos);
+    } catch {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/admin/album-photos/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id as string);
+      const deleted = await storage.deleteAlbumPhoto(id);
+      if (!deleted) return res.status(404).json({ error: "Photo not found" });
+      res.json({ ok: true });
+    } catch {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/vendor-registrations", async (req, res) => {
+    try {
+      const data = insertVendorRegistrationSchema.parse(req.body);
+      const registration = await storage.createVendorRegistration(data);
+      res.status(201).json(registration);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid data", details: error.errors });
+      } else {
+        res.status(500).json({ error: "Internal server error" });
+      }
+    }
+  });
+
+  app.get("/api/sponsors/event/:eventType", async (req, res) => {
+    const sponsors = await storage.getSponsorsByEvent(req.params.eventType);
+    res.json(sponsors);
+  });
+
+  app.get("/api/admin/vendor-registrations", requireAuth, async (req, res) => {
+    const eventType = req.query.eventType as string | undefined;
+    const registrations = await storage.getVendorRegistrations(eventType);
+    res.json(registrations);
+  });
+
+  app.patch("/api/admin/vendor-registrations/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id as string);
+      const data = insertVendorRegistrationSchema.partial().parse(req.body);
+      const updated = await storage.updateVendorRegistration(id, data);
+      if (!updated) return res.status(404).json({ error: "Registration not found" });
+      res.json(updated);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/admin/vendor-registrations/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id as string);
+      const deleted = await storage.deleteVendorRegistration(id);
+      if (!deleted) return res.status(404).json({ error: "Registration not found" });
+      res.json({ ok: true });
+    } catch {
+      res.status(500).json({ error: "Internal server error" });
+    }
   });
 
   app.get("/api/admin/github/user", requireAuth, async (_req, res) => {

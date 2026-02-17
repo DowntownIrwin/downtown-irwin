@@ -19,6 +19,7 @@ export const events = pgTable("events", {
   category: text("category").notNull(),
   featured: boolean("featured").default(false),
   imageUrl: text("image_url"),
+  externalLink: text("external_link"),
 });
 
 export const vehicleRegistrations = pgTable("vehicle_registrations", {
@@ -53,6 +54,8 @@ export const sponsors = pgTable("sponsors", {
   level: text("level").notNull(),
   logoUrl: text("logo_url"),
   websiteUrl: text("website_url"),
+  eventType: text("event_type").default("car-cruise"),
+  sponsorImageUrl: text("sponsor_image_url"),
 });
 
 export const businesses = pgTable("businesses", {
@@ -75,6 +78,37 @@ export const contactMessages = pgTable("contact_messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const photoAlbums = pgTable("photo_albums", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  coverPhotoUrl: text("cover_photo_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const albumPhotos = pgTable("album_photos", {
+  id: serial("id").primaryKey(),
+  albumId: integer("album_id").notNull(),
+  url: text("url").notNull(),
+  caption: text("caption"),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const vendorRegistrations = pgTable("vendor_registrations", {
+  id: serial("id").primaryKey(),
+  eventType: text("event_type").notNull(),
+  businessName: text("business_name").notNull(),
+  contactName: text("contact_name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone").notNull(),
+  vendorCategory: text("vendor_category").notNull(),
+  description: text("description"),
+  specialRequests: text("special_requests"),
+  status: text("status").default("pending").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -92,6 +126,12 @@ export const insertBusinessSchema = createInsertSchema(businesses).omit({ id: tr
 
 export const insertContactMessageSchema = createInsertSchema(contactMessages).omit({ id: true, createdAt: true });
 
+export const insertPhotoAlbumSchema = createInsertSchema(photoAlbums).omit({ id: true, createdAt: true });
+
+export const insertAlbumPhotoSchema = createInsertSchema(albumPhotos).omit({ id: true, createdAt: true });
+
+export const insertVendorRegistrationSchema = createInsertSchema(vendorRegistrations).omit({ id: true, createdAt: true });
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Event = typeof events.$inferSelect;
@@ -106,3 +146,9 @@ export type Business = typeof businesses.$inferSelect;
 export type InsertBusiness = z.infer<typeof insertBusinessSchema>;
 export type ContactMessage = typeof contactMessages.$inferSelect;
 export type InsertContactMessage = z.infer<typeof insertContactMessageSchema>;
+export type PhotoAlbum = typeof photoAlbums.$inferSelect;
+export type InsertPhotoAlbum = z.infer<typeof insertPhotoAlbumSchema>;
+export type AlbumPhoto = typeof albumPhotos.$inferSelect;
+export type InsertAlbumPhoto = z.infer<typeof insertAlbumPhotoSchema>;
+export type VendorRegistration = typeof vendorRegistrations.$inferSelect;
+export type InsertVendorRegistration = z.infer<typeof insertVendorRegistrationSchema>;

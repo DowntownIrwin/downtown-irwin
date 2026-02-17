@@ -6,7 +6,11 @@ import {
   type Sponsor, type InsertSponsor,
   type Business, type InsertBusiness,
   type ContactMessage, type InsertContactMessage,
+  type PhotoAlbum, type InsertPhotoAlbum,
+  type AlbumPhoto, type InsertAlbumPhoto,
+  type VendorRegistration, type InsertVendorRegistration,
   users, events, vehicleRegistrations, sponsorshipInquiries, sponsors, businesses, contactMessages,
+  photoAlbums, albumPhotos, vendorRegistrations,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -40,6 +44,23 @@ export interface IStorage {
 
   getContactMessages(): Promise<ContactMessage[]>;
   createContactMessage(message: InsertContactMessage): Promise<ContactMessage>;
+
+  getPhotoAlbums(): Promise<PhotoAlbum[]>;
+  getPhotoAlbum(id: number): Promise<PhotoAlbum | undefined>;
+  createPhotoAlbum(album: InsertPhotoAlbum): Promise<PhotoAlbum>;
+  updatePhotoAlbum(id: number, album: Partial<InsertPhotoAlbum>): Promise<PhotoAlbum | undefined>;
+  deletePhotoAlbum(id: number): Promise<boolean>;
+
+  getAlbumPhotos(albumId: number): Promise<AlbumPhoto[]>;
+  createAlbumPhoto(photo: InsertAlbumPhoto): Promise<AlbumPhoto>;
+  deleteAlbumPhoto(id: number): Promise<boolean>;
+
+  getVendorRegistrations(eventType?: string): Promise<VendorRegistration[]>;
+  createVendorRegistration(reg: InsertVendorRegistration): Promise<VendorRegistration>;
+  updateVendorRegistration(id: number, reg: Partial<InsertVendorRegistration>): Promise<VendorRegistration | undefined>;
+  deleteVendorRegistration(id: number): Promise<boolean>;
+
+  getSponsorsByEvent(eventType: string): Promise<Sponsor[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -145,6 +166,71 @@ export class DatabaseStorage implements IStorage {
   async createContactMessage(message: InsertContactMessage): Promise<ContactMessage> {
     const [created] = await db.insert(contactMessages).values(message).returning();
     return created;
+  }
+
+  async getPhotoAlbums(): Promise<PhotoAlbum[]> {
+    return db.select().from(photoAlbums);
+  }
+
+  async getPhotoAlbum(id: number): Promise<PhotoAlbum | undefined> {
+    const [album] = await db.select().from(photoAlbums).where(eq(photoAlbums.id, id));
+    return album;
+  }
+
+  async createPhotoAlbum(album: InsertPhotoAlbum): Promise<PhotoAlbum> {
+    const [created] = await db.insert(photoAlbums).values(album).returning();
+    return created;
+  }
+
+  async updatePhotoAlbum(id: number, album: Partial<InsertPhotoAlbum>): Promise<PhotoAlbum | undefined> {
+    const [updated] = await db.update(photoAlbums).set(album).where(eq(photoAlbums.id, id)).returning();
+    return updated;
+  }
+
+  async deletePhotoAlbum(id: number): Promise<boolean> {
+    await db.delete(albumPhotos).where(eq(albumPhotos.albumId, id));
+    const result = await db.delete(photoAlbums).where(eq(photoAlbums.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAlbumPhotos(albumId: number): Promise<AlbumPhoto[]> {
+    return db.select().from(albumPhotos).where(eq(albumPhotos.albumId, albumId));
+  }
+
+  async createAlbumPhoto(photo: InsertAlbumPhoto): Promise<AlbumPhoto> {
+    const [created] = await db.insert(albumPhotos).values(photo).returning();
+    return created;
+  }
+
+  async deleteAlbumPhoto(id: number): Promise<boolean> {
+    const result = await db.delete(albumPhotos).where(eq(albumPhotos.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getVendorRegistrations(eventType?: string): Promise<VendorRegistration[]> {
+    if (eventType) {
+      return db.select().from(vendorRegistrations).where(eq(vendorRegistrations.eventType, eventType));
+    }
+    return db.select().from(vendorRegistrations);
+  }
+
+  async createVendorRegistration(reg: InsertVendorRegistration): Promise<VendorRegistration> {
+    const [created] = await db.insert(vendorRegistrations).values(reg).returning();
+    return created;
+  }
+
+  async updateVendorRegistration(id: number, reg: Partial<InsertVendorRegistration>): Promise<VendorRegistration | undefined> {
+    const [updated] = await db.update(vendorRegistrations).set(reg).where(eq(vendorRegistrations.id, id)).returning();
+    return updated;
+  }
+
+  async deleteVendorRegistration(id: number): Promise<boolean> {
+    const result = await db.delete(vendorRegistrations).where(eq(vendorRegistrations.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getSponsorsByEvent(eventType: string): Promise<Sponsor[]> {
+    return db.select().from(sponsors).where(eq(sponsors.eventType, eventType));
   }
 }
 
